@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "fragmentos/_iconos.html" import icono %}
+{% block titulo %}Crear la cuenta del titular{% endblock %}
+{% block contenido %}
+{# Sin sesión: sin menú y sin datos del perfil del autónomo (FR-108, FR-110). #}
+<section class="entrar">
+  <h1>Crear la cuenta del titular</h1>
+  <p>Esta cuenta tendrá acceso a todos los datos y podrá dar de alta a otros usuarios.</p>
+  <form method="post" action="/crear-titular">
+    <label for="nombre">Nombre</label>
+    <input type="text" id="nombre" name="nombre" value="{{ datos.nombre or '' }}" autocomplete="name" required
+           {% if errores.nombre %}aria-invalid="true" aria-describedby="error-nombre"{% endif %}>
+    {% if errores.nombre %}<p class="error-campo" id="error-nombre">{{ icono('triangulo') }}<span>{{ errores.nombre }}</span></p>{% endif %}
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="{{ datos.email or '' }}" autocomplete="username" required
+           {% if errores.email %}aria-invalid="true" aria-describedby="error-email"{% endif %}>
+    {% if errores.email %}<p class="error-campo" id="error-email">{{ icono('triangulo') }}<span>{{ errores.email }}</span></p>{% endif %}
+
+    <label for="contrasena">Contraseña</label>
+    <input type="password" id="contrasena" name="contrasena" autocomplete="new-password" minlength="10" required
+           aria-describedby="ayuda-contrasena{% if errores.contrasena %} error-contrasena{% endif %}"
+           {% if errores.contrasena %}aria-invalid="true"{% endif %}>
+    <p class="ayuda" id="ayuda-contrasena">Mínimo 10 caracteres</p>
+    {% if errores.contrasena %}<p class="error-campo" id="error-contrasena">{{ icono('triangulo') }}<span>{{ errores.contrasena }}</span></p>{% endif %}
+
+    <label for="repetir">Repetir contraseña</label>
+    <input type="password" id="repetir" name="repetir" autocomplete="new-password" required
+           {% if errores.repetir %}aria-invalid="true" aria-describedby="error-repetir"{% endif %}>
+    {% if errores.repetir %}<p class="error-campo" id="error-repetir">{{ icono('triangulo') }}<span>{{ errores.repetir }}</span></p>{% endif %}
+
+    <div class="acciones"><button type="submit" class="boton">Crear cuenta</button></div>
+  </form>
+</section>
+{% endblock %}

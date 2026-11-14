@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "fragmentos/_mensajes.html" import mensaje %}
+{% block titulo %}Ajustes{% endblock %}
+{% block contenido %}
+<h1>Ajustes fiscales</h1>
+<p class="suave">Valores por defecto para los presupuestos nuevos.</p>
+
+{% if errores %}<ul class="errores" role="alert">{% for e in errores %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+{% if guardado %}{{ mensaje('exito', 'Ajustes guardados.') }}{% endif %}
+
+<form method="post" action="/ajustes">
+  <label for="tipo_iva">Tipo de IVA por defecto</label>
+  <select id="tipo_iva" name="tipo_iva">
+    {% for t in (21, 10, 4, 0) %}<option value="{{ t }}"{% if ajustes.tipo_iva == t %} selected{% endif %}>{{ t|porcentaje }}</option>{% endfor %}
+  </select>
+
+  <label class="casilla">
+    <input type="checkbox" name="retencion_activa" value="1"{% if ajustes.retencion_activa %} checked{% endif %}>
+    Aplico retención de IRPF
+  </label>
+
+  <label for="tipo_retencion">Tipo de retención</label>
+  <select id="tipo_retencion" name="tipo_retencion">
+    <option value="15"{% if ajustes.tipo_retencion == 15 %} selected{% endif %}>15 % (general)</option>
+    <option value="7"{% if ajustes.tipo_retencion == 7 %} selected{% endif %}>7 % (inicio de actividad)</option>
+  </select>
+  <p class="ayuda">El 7 % se aplica el año de inicio de actividad y los dos siguientes. Los presupuestos ya descargados no cambian.</p>
+
+  <label for="dias_validez">Días de validez</label>
+  <input type="text" inputmode="numeric" id="dias_validez" name="dias_validez" value="{{ ajustes.dias_validez }}">
+
+  <label for="mencion_canarias">Mención para clientes de Canarias, Ceuta y Melilla</label>
+  <textarea id="mencion_canarias" name="mencion_canarias" placeholder="Vacío: no se muestra ninguna mención">{{ ajustes.mencion_canarias }}</textarea>
+
+  <div class="acciones"><button type="submit" class="boton">Guardar ajustes</button></div>
+</form>
+{% endblock %}

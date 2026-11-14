@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "fragmentos/_mensajes.html" import mensaje %}
+{% from "fragmentos/_iconos.html" import icono %}
+{% block titulo %}Mi cuenta{% endblock %}
+{% block contenido %}
+<h1>Mi cuenta</h1>
+<p>{{ usuario.nombre }} · {{ usuario.email }} · {{ 'Titular' if usuario.tipo == 'titular' else 'Asistente' }}</p>
+
+<h2>Cambiar contraseña</h2>
+{% if guardado %}{{ mensaje('exito', 'Contraseña cambiada. Se han cerrado tus otras sesiones.') }}{% endif %}
+<form method="post" action="/mi-cuenta/contrasena">
+  <label for="actual">Contraseña actual</label>
+  <input type="password" id="actual" name="actual" autocomplete="current-password" required
+         {% if errores.actual %}aria-invalid="true" aria-describedby="error-actual"{% endif %}>
+  {% if errores.actual %}<p class="error-campo" id="error-actual">{{ icono('triangulo') }}<span>{{ errores.actual }}</span></p>{% endif %}
+
+  <label for="nueva">Contraseña nueva</label>
+  <input type="password" id="nueva" name="nueva" autocomplete="new-password" minlength="10" required
+         aria-describedby="ayuda-nueva{% if errores.nueva %} error-nueva{% endif %}"
+         {% if errores.nueva %}aria-invalid="true"{% endif %}>
+  <p class="ayuda" id="ayuda-nueva">Mínimo 10 caracteres</p>
+  {% if errores.nueva %}<p class="error-campo" id="error-nueva">{{ icono('triangulo') }}<span>{{ errores.nueva }}</span></p>{% endif %}
+
+  <label for="repetir">Repetir contraseña nueva</label>
+  <input type="password" id="repetir" name="repetir" autocomplete="new-password" required
+         {% if errores.repetir %}aria-invalid="true" aria-describedby="error-repetir"{% endif %}>
+  {% if errores.repetir %}<p class="error-campo" id="error-repetir">{{ icono('triangulo') }}<span>{{ errores.repetir }}</span></p>{% endif %}
+
+  <div class="acciones"><button type="submit" class="boton">Cambiar contraseña</button></div>
+</form>
+{% endblock %}

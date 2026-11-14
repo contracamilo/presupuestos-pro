@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "fragmentos/_mensajes.html" import mensaje as caja_mensaje %}
+{% from "fragmentos/_iconos.html" import icono %}
+{% block titulo %}Usuarios{% endblock %}
+{% block contenido %}
+{# Campo con su error debajo, enlazado con aria-describedby (FR-107). #}
+{% macro campo(id, etiqueta, nombre, tipo='text', valor='', error=None, ayuda=None, autocomplete=None) -%}
+  <label for="{{ id }}">{{ etiqueta }}</label>
+  {%- set descr = ([('ayuda-' ~ id) if ayuda else None, ('error-' ~ id) if error else None]|select|join(' ')) %}
+  <input type="{{ tipo }}" id="{{ id }}" name="{{ nombre }}"{% if tipo != 'password' %} value="{{ valor }}"{% endif %} required
+         {%- if tipo == 'password' and nombre == 'contrasena' %} minlength="10"{% endif %}
+         {%- if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}
+         {%- if descr %} aria-describedby="{{ descr }}"{% endif %}
+         {%- if error %} aria-invalid="true"{% endif %}>
+  {% if ayuda %}<p class="ayuda" id="ayuda-{{ id }}">{{ ayuda }}</p>{% endif %}
+  {% if error %}<p class="error-campo" id="error-{{ id }}">{{ icono('triangulo') }}<span>{{ error }}</span></p>{% endif %}
+{%- endmacro %}
+
+<h1>Usuarios</h1>
+{% if mensaje %}{{ caja_mensaje('exito', mensaje) }}{% endif %}
+
+<ul class="lista">
+  {% for u in usuarios %}
+  <li>
+    <div class="fila">
+      <span><strong>{{ u.nombre }}</strong> · {{ u.email }}</span>
+      <span class="tipo-estado">{{ 'Titular' if u.tipo == 'titular' else 'Asistente' }} · {{ 'Activa' if u.activo else 'Dada de baja' }}</span>
+    </div>
+    {% if u.tipo == 'asistente' and u.activo %}
+    {% set errores = errores_restablecer if restablecer_id == u.id else {} %}
+    <details class="plegable"{% if errores %} open{% endif %}>
+      <summary>Restablecer contraseña</summary>
+      <form method="post" action="/usuarios/{{ u.id }}/contrasena">
+        {{ campo('contrasena-' ~ u.id, 'Contraseña nueva', 'contrasena', 'password', error=errores.contrasena,
+                 ayuda='Mínimo 10 caracteres', autocomplete='new-password') }}
+        {{ campo('repetir-' ~ u.id, 'Repetir contraseña', 'repetir', 'password', error=errores.repetir,
+                 autocomplete='new-password') }}
+        <div class="acciones"><button type="submit" class="boton secundario">Restablecer contraseña</button></div>
+      </form>
+    </details>
+    <div class="acciones">
+      <button type="button" class="boton peligro" hx-post="/usuarios/{{ u.id }}/baja"
+              hx-confirm="¿Dar de baja a {{ u.nombre }}? No podrá volver a entrar. Los presupuestos que creó se conservan.">Dar de baja</button>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+
+<details class="alta-usuario"{% if abrir_alta %} open{% endif %}>
+  <summary class="boton">Añadir usuario</summary>
+  <form method="post" action="/usuarios">
+    {{ campo('alta-nombre', 'Nombre', 'nombre', valor=alta.nombre if alta else '', error=errores_alta.nombre) }}
+    {{ campo('alta-email', 'Email', 'email', 'email', valor=alta.email if alta else '', error=errores_alta.email) }}
+    {{ campo('alta-contrasena', 'Contraseña', 'contrasena', 'password', error=errores_alta.contrasena,
+             ayuda='Mínimo 10 caracteres', autocomplete='new-password') }}
+    {{ campo('alta-repetir', 'Repetir contraseña', 'repetir', 'password', error=errores_alta.repetir,
+             autocomplete='new-password') }}
+    <div class="acciones"><button type="submit" class="boton">Dar de alta</button></div>
+  </form>
+</details>
+{% endblock %}

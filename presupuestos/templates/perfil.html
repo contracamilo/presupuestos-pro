@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "fragmentos/_mensajes.html" import mensaje %}
+{% block titulo %}Perfil{% endblock %}
+{% block contenido %}
+<h1>Tu perfil</h1>
+<p class="suave">Estos datos aparecen en la cabecera de tus presupuestos. Los presupuestos ya descargados conservan los datos con los que se descargaron.</p>
+
+{% if error %}{{ mensaje('error', error) }}{% endif %}
+{% if guardado %}{{ mensaje('exito', 'Perfil guardado.') }}{% endif %}
+
+<form method="post" action="/perfil">
+  <div class="rejilla">
+    <div>
+      <label for="nombre">Nombre o razón social *</label>
+      <input type="text" id="nombre" name="nombre" value="{{ perfil.nombre }}">
+    </div>
+    <div>
+      <label for="nif">NIF *</label>
+      <input type="text" id="nif" name="nif" value="{{ perfil.nif }}">
+    </div>
+    <div>
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" value="{{ perfil.email }}">
+    </div>
+    <div>
+      <label for="telefono">Teléfono</label>
+      <input type="text" id="telefono" name="telefono" value="{{ perfil.telefono }}">
+    </div>
+  </div>
+  <label for="direccion">Dirección fiscal *</label>
+  <textarea id="direccion" name="direccion">{{ perfil.direccion }}</textarea>
+  <p class="ayuda">* Obligatorio.</p>
+  <div class="acciones"><button type="submit" class="boton">Guardar perfil</button></div>
+</form>
+
+<h2>Logo (aparece en tus PDF)</h2>
+<p class="ayuda" id="ayuda-logo">PNG, JPG o SVG, hasta 2 MB</p>
+{% if error_logo %}{{ mensaje('error', error_logo) }}{% endif %}
+{% if logo_guardado %}{{ mensaje('exito', 'Logo guardado.') }}{% endif %}
+{% if logo_quitado %}{{ mensaje('exito', 'Logo quitado.') }}{% endif %}
+{% if perfil.logo_id %}<img class="logo-previa" src="/logos/{{ perfil.logo_id }}" alt="Vista previa del logo">{% endif %}
+<form method="post" action="/perfil/logo" enctype="multipart/form-data">
+  <label for="logo">{{ 'Nuevo logo' if perfil.logo_id else 'Archivo del logo' }}</label>
+  <input type="file" id="logo" name="logo" accept="image/png,image/jpeg,image/svg+xml" aria-describedby="ayuda-logo" required>
+  <div class="acciones">
+    <button type="submit" class="boton">{{ 'Cambiar logo' if perfil.logo_id else 'Subir logo' }}</button>
+    {% if perfil.logo_id %}
+    <button type="button" class="boton peligro" hx-post="/perfil/logo/quitar"
+            hx-confirm="¿Quitar el logo? Los presupuestos ya descargados lo conservan.">Quitar logo</button>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}
