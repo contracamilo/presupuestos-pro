@@ -1,0 +1,18 @@
+<section id="lista-clientes">
+  {% if clientes %}
+  <ul class="lista">
+    {% for c in clientes %}
+    <li>
+      <a class="fila" href="/clientes/{{ c.id }}">
+        <span><strong>{{ c.nombre }}</strong>{% if c.nif %} · {{ c.nif }}{% endif %}</span>
+        <span class="dato-secundario">{{ 'Particular' if c.categoria == 'particular' else 'Empresa/autónomo' }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif q %}
+  <p class="suave">Ningún cliente coincide con «{{ q }}».</p>
+  {% else %}
+  <p class="suave">Todavía no hay clientes.</p>
+  {% endif %}
+</section>

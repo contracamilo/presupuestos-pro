@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block titulo %}Catálogo{% endblock %}
+{% block contenido %}
+<h1>Catálogo de servicios</h1>
+<p class="suave">Precios sin IVA. Cambiar un precio aquí no modifica los presupuestos ya hechos.</p>
+{% include "fragmentos/_catalogo_lista.html" %}
+{% endblock %}

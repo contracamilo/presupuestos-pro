@@ -1,0 +1,12 @@
+{% from "fragmentos/_mensajes.html" import mensaje %}
+<section id="ficha-cliente">
+  {% if c.anonimizado %}
+    {{ mensaje('aviso', 'Este cliente fue eliminado a petición suya. Sus presupuestos se conservan con número e importes, pero no se pueden descargar.') }}
+  {% else %}
+    {% if c.archivado %}{{ mensaje('aviso', 'Cliente archivado: no aparece en las listas de selección.') }}{% endif %}
+    {% if guardado %}{{ mensaje('exito', 'Cambios guardados.') }}{% endif %}
+    {% with accion_put="/clientes/" ~ c.id, presupuesto_id=None, id_error="error-cliente", objetivo="#ficha-cliente" %}
+      {% include "fragmentos/_cliente_form.html" %}
+    {% endwith %}
+  {% endif %}
+</section>

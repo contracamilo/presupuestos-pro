@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Clientes{% endblock %}
+{% block contenido %}
+<h1>Clientes</h1>
+
+<label for="buscar">Buscar por nombre o NIF</label>
+<input type="search" id="buscar" name="q" value="{{ q }}" autocomplete="off"
+       hx-get="/clientes" hx-trigger="input changed delay:300ms, search" hx-target="#lista-clientes" hx-swap="outerHTML">
+
+{% include "fragmentos/_clientes_lista.html" %}
+
+<details class="plegable">
+  <summary>Nuevo cliente</summary>
+  {% with accion_post="/clientes", c=None, presupuesto_id=None, id_error="error-cliente", objetivo="this" %}
+    {% include "fragmentos/_cliente_form.html" %}
+  {% endwith %}
+</details>
+{% endblock %}

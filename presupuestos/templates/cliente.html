@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}{{ c.nombre }}{% endblock %}
+{% block contenido %}
+<a class="boton-volver" href="/clientes">← Volver a clientes</a>
+<h1>{{ c.nombre }}</h1>
+{% include "fragmentos/_ficha_cliente.html" %}
+
+{% if not c.anonimizado %}
+<h2>Otras acciones</h2>
+<div class="acciones">
+  {% if not c.archivado %}
+  <button type="button" class="boton secundario" hx-post="/clientes/{{ c.id }}/archivar"
+          hx-confirm="¿Archivar este cliente? Dejará de aparecer en las listas, pero sus presupuestos lo conservarán.">Archivar</button>
+  {% endif %}
+  <button type="button" class="boton peligro" hx-post="/clientes/{{ c.id }}/anonimizar"
+          hx-confirm="Se borrarán definitivamente el nombre, NIF, dirección, país y email de este cliente. Sus presupuestos se conservarán, pero no podrán descargarse. ¿Continuar?">Anonimizar cliente</button>
+</div>
+{% endif %}
+{% endblock %}

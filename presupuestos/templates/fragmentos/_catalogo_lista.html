@@ -1,0 +1,57 @@
+<section id="catalogo">
+  {% for s in servicios %}
+  <form class="linea" id="servicio-{{ s.id }}" hx-put="/catalogo/{{ s.id }}" hx-trigger="submit"
+        hx-target="#catalogo" hx-swap="outerHTML">
+    <div class="descripcion">
+      <label for="s{{ s.id }}-nombre">Nombre</label>
+      <input type="text" id="s{{ s.id }}-nombre" name="nombre" value="{{ s.nombre }}" required>
+    </div>
+    <div class="descripcion">
+      <label for="s{{ s.id }}-descripcion">Descripción</label>
+      <input type="text" id="s{{ s.id }}-descripcion" name="descripcion" value="{{ s.descripcion }}">
+    </div>
+    <div>
+      <label for="s{{ s.id }}-unidad">Unidad</label>
+      <select id="s{{ s.id }}-unidad" name="unidad">
+        {% for u in unidades %}<option value="{{ u }}"{% if s.unidad == u %} selected{% endif %}>{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="s{{ s.id }}-precio">Precio sin IVA (€)</label>
+      <input type="text" inputmode="decimal" id="s{{ s.id }}-precio" name="precio" value="{{ s.precio_cent|importe_editable }}">
+    </div>
+    <div class="botones">
+      <button type="submit" class="boton">Guardar</button>
+      <button type="button" class="boton peligro" hx-post="/catalogo/{{ s.id }}/archivar" hx-target="#catalogo" hx-swap="outerHTML"
+              hx-confirm="¿Archivar «{{ s.nombre }}»? Dejará de aparecer al añadir líneas; los presupuestos no cambian.">Archivar</button>
+    </div>
+    <div id="error-servicio-{{ s.id }}" class="descripcion" role="alert"></div>
+  </form>
+  {% else %}
+  <p class="suave">Todavía no hay servicios.</p>
+  {% endfor %}
+
+  <h2>Nuevo servicio</h2>
+  <form class="linea" hx-post="/catalogo" hx-target="#catalogo" hx-swap="outerHTML">
+    <div class="descripcion">
+      <label for="nuevo-nombre">Nombre</label>
+      <input type="text" id="nuevo-nombre" name="nombre" required>
+    </div>
+    <div class="descripcion">
+      <label for="nuevo-descripcion">Descripción (opcional)</label>
+      <input type="text" id="nuevo-descripcion" name="descripcion">
+    </div>
+    <div>
+      <label for="nuevo-unidad">Unidad</label>
+      <select id="nuevo-unidad" name="unidad">
+        {% for u in unidades %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="nuevo-precio">Precio sin IVA (€)</label>
+      <input type="text" inputmode="decimal" id="nuevo-precio" name="precio" placeholder="0,00">
+    </div>
+    <div class="botones"><button type="submit" class="boton">Añadir al catálogo</button></div>
+    <div id="error-servicio-nuevo" class="descripcion" role="alert"></div>
+  </form>
+</section>

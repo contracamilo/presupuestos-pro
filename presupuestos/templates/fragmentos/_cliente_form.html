@@ -1,0 +1,74 @@
+{# Parámetros: accion_post o accion_put, c (cliente o None), presupuesto_id (opcional), id_error, objetivo #}
+{# Tipo de documento y país: opciones según categoría y territorio (FR-111 a FR-114). app.js filtra; el servidor valida. #}
+<form class="form-cliente"
+      {% if accion_put %}hx-put="{{ accion_put }}"{% else %}hx-post="{{ accion_post }}"{% endif %}
+      hx-target="{{ objetivo }}" hx-swap="outerHTML">
+  <div id="{{ id_error }}" role="alert"></div>
+  {% if presupuesto_id %}<input type="hidden" name="presupuesto_id" value="{{ presupuesto_id }}">{% endif %}
+  {% set pre = id_error %}
+  {% set tipo_actual = c.tipo_documento if c else '' %}
+  {% set pais_actual = c.pais if c else '' %}
+  <label for="{{ pre }}-nombre">Nombre o razón social</label>
+  <input type="text" id="{{ pre }}-nombre" name="nombre" value="{{ c.nombre if c else '' }}" required>
+  <div class="rejilla">
+    <div>
+      <label for="{{ pre }}-categoria">Categoría</label>
+      <select id="{{ pre }}-categoria" name="categoria">
+        <option value="empresa"{% if c and c.categoria == 'empresa' %} selected{% endif %}>Empresa/autónomo</option>
+        <option value="particular"{% if c and c.categoria == 'particular' %} selected{% endif %}>Particular</option>
+      </select>
+    </div>
+    <div>
+      <label for="{{ pre }}-territorio">Territorio</label>
+      <select id="{{ pre }}-territorio" name="territorio">
+        {% for valor, texto in [('peninsula', 'Península y Baleares'), ('canarias', 'Canarias, Ceuta o Melilla'), ('ue', 'Otro país UE'), ('fuera_ue', 'Fuera de la UE')] %}
+        <option value="{{ valor }}"{% if c and c.territorio == valor %} selected{% endif %}>{{ texto }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="campo-verificado"{% if not (c and c.territorio == 'ue') %} hidden{% endif %}>
+    <label class="casilla">
+      <input type="checkbox" name="nif_iva_verificado" value="1"{% if c and c.nif_iva_verificado %} checked{% endif %}>
+      NIF-IVA verificado
+    </label>
+  </div>
+  <div class="rejilla">
+    <div>
+      <label for="{{ pre }}-tipo_documento">Tipo de documento</label>
+      <select id="{{ pre }}-tipo_documento" name="tipo_documento">
+        <option value=""{% if not tipo_actual %} selected{% endif %}>{{ documento.ETIQUETAS[''] }}</option>
+        {% for tipo in documento.TIPOS %}
+        <option value="{{ tipo }}" data-permitido-en="{{ documento.permitido_en(tipo)|join(' ') }}"
+                {%- if documento.preseleccionado_en(tipo) %} data-preseleccion-en="{{ documento.preseleccionado_en(tipo)|join(' ') }}"{% endif %}
+                {%- if tipo == tipo_actual %} selected{% endif %}>{{ documento.ETIQUETAS[tipo] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="{{ pre }}-nif">Número de documento</label>
+      <input type="text" id="{{ pre }}-nif" name="nif" value="{{ c.nif if c else '' }}">
+    </div>
+  </div>
+  <label for="{{ pre }}-pais">País</label>
+  <select id="{{ pre }}-pais" name="pais" class="selector-pais">
+    {% if pais_actual and pais_actual not in paises.PAISES %}
+    <option value="{{ pais_actual }}" class="pais-revisar" selected>Revisar país: {{ pais_actual }}</option>
+    {% endif %}
+    <option value=""{% if not pais_actual %} selected{% endif %}>Elige un país</option>
+    {% for nombre in paises.PAISES %}
+    <option value="{{ nombre }}"{% if nombre in paises.PAISES_UE %} data-ue="1"{% endif %}{% if nombre == pais_actual %} selected{% endif %}>{{ nombre }}</option>
+    {% endfor %}
+  </select>
+  <div class="rejilla">
+    <div>
+      <label for="{{ pre }}-direccion">Dirección</label>
+      <textarea id="{{ pre }}-direccion" name="direccion">{{ c.direccion if c else '' }}</textarea>
+    </div>
+    <div>
+      <label for="{{ pre }}-email">Email</label>
+      <input type="email" id="{{ pre }}-email" name="email" value="{{ c.email if c else '' }}">
+    </div>
+  </div>
+  <div class="acciones"><button type="submit" class="boton">Guardar cliente</button></div>
+</form>
