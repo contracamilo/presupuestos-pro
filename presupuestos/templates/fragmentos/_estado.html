@@ -1,0 +1,6 @@
+{# Etiqueta de estado del presupuesto: texto + icono + forma (FR-210, contracts/estados.md). #}
+{% from "fragmentos/_iconos.html" import icono %}
+{% macro etiqueta_estado(valor) -%}
+{%- set iconos = {'borrador': 'lapiz', 'enviado': 'avion', 'caducado': 'reloj', 'aceptado': 'check', 'rechazado': 'aspa'} -%}
+<span class="estado {{ valor }}"><span class="solo-lector">Estado: </span>{{ icono(iconos[valor]) }}{{ etiquetas_estado[valor] }}</span>
+{%- endmacro %}

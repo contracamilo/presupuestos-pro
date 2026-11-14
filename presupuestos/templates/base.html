@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "422", "swap": true}, {"code": "409", "swap": true}, {"code": "[45]..", "swap": false, "error": true}]}'>
+  <meta name="color-scheme" content="light">
+  <title>{% block titulo %}PresupuestosPro{% endblock %} · PresupuestosPro</title>
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/estilos.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body{% if usuario %} class="con-menu"{% endif %}>
+  {% if usuario %}
+  <a class="saltar boton" href="#contenido">Saltar al contenido</a>
+  {# Enlace del menú; se resalta (aria-current) si la ruta actual empieza por alguno de los prefijos (FR-103). #}
+  {% macro enlace(href, texto, prefijos=()) -%}
+    {%- set ruta = request.url.path -%}
+    {%- set ns = namespace(actual=false) -%}
+    {%- for pre in prefijos -%}
+      {%- if (pre == '/' and ruta == '/') or (pre != '/' and (ruta == pre or ruta.startswith(pre ~ '/'))) -%}
+        {%- set ns.actual = true -%}
+      {%- endif -%}
+    {%- endfor -%}
+    <a href="{{ href }}"{% if ns.actual %} aria-current="page"{% endif %}>{{ texto }}</a>
+  {%- endmacro %}
+  <header class="barra">
+    <button type="button" class="boton-menu" aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menú">☰</button>
+    <a class="marca" href="/">PresupuestosPro</a>
+  </header>
+  <nav id="menu-lateral" class="menu-lateral" aria-label="Menú principal">
+    <p class="grupo-menu">Trabajo</p>
+    <ul>
+      <li>{{ enlace('/', 'Presupuestos', ('/', '/presupuestos')) }}</li>
+      <li>{{ enlace('/clientes', 'Clientes', ('/clientes',)) }}</li>
+      <li>{{ enlace('/catalogo', 'Catálogo', ('/catalogo',)) }}</li>
+    </ul>
+    <p class="grupo-menu">Configuración</p>
+    <ul>
+      <li>{{ enlace('/perfil', 'Perfil', ('/perfil',)) }}</li>
+      <li>{{ enlace('/ajustes', 'Ajustes', ('/ajustes',)) }}</li>
+      {% if usuario.tipo == 'titular' %}<li>{{ enlace('/usuarios', 'Usuarios', ('/usuarios',)) }}</li>{% endif %}
+      <li>{{ enlace('/mi-cuenta', 'Mi cuenta', ('/mi-cuenta',)) }}</li>
+      <li>{{ enlace('/exportar', 'Exportar') }}</li>
+    </ul>
+    <form method="post" action="/salir" class="salir">
+      <button type="submit" class="boton secundario">Salir</button>
+    </form>
+  </nav>
+  <div class="menu-fondo" hidden></div>
+  {% endif %}
+  <div id="aviso-conexion" class="aviso-conexion" role="alert" hidden>No se ha podido guardar. Comprueba tu conexión.</div>
+  <main id="contenido" tabindex="-1">
+    {% block contenido %}{% endblock %}
+  </main>
+</body>
+</html>

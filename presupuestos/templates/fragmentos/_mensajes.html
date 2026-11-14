@@ -1,0 +1,6 @@
+{# Mensajes de éxito, aviso y error con icono y texto (US1 AS6). El prefijo oculto lo lee el lector de pantalla. #}
+{% from "fragmentos/_iconos.html" import icono %}
+{% macro mensaje(tipo, texto, rol=None, id=None) -%}
+{%- set datos = {'exito': ('check', 'Hecho: ', 'status'), 'aviso': ('triangulo', 'Aviso: ', 'status'), 'error': ('aspa', 'Error: ', 'alert')}[tipo] -%}
+<p class="mensaje {{ tipo }}" role="{{ rol or datos[2] }}"{% if id %} id="{{ id }}"{% endif %}>{{ icono(datos[0]) }}<span><span class="solo-lector">{{ datos[1] }}</span>{{ texto }}</span></p>
+{%- endmacro %}

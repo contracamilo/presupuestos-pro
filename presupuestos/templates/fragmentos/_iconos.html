@@ -1,0 +1,18 @@
+{# Iconos en SVG en línea (research V8). Siempre acompañan a un texto; nunca lo sustituyen. #}
+{% macro icono(nombre) -%}
+<svg class="icono" aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+{%- if nombre == 'lapiz' -%}
+<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>
+{%- elif nombre == 'avion' -%}
+<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+{%- elif nombre == 'reloj' -%}
+<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+{%- elif nombre == 'check' -%}
+<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>
+{%- elif nombre == 'aspa' -%}
+<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>
+{%- elif nombre == 'triangulo' -%}
+<path d="M12 3L2 21h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/>
+{%- endif -%}
+</svg>
+{%- endmacro %}
