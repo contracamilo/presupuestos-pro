@@ -1,0 +1,17 @@
+.git/
+.venv/
+.env
+.env.*
+!.env.example
+datos/
+copias/
+specs/
+.specify/
+.claude/
+docs/
+**/__pycache__/
+.pytest_cache/
+*.egg-info/
+*.log
+Dockerfile*
+.dockerignore

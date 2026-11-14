@@ -1,0 +1,29 @@
+[project]
+name = "presupuestos"
+version = "1.0.0"
+description = "PresupuestosPro v1: presupuestos para autónomos en España"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "jinja2",
+    "weasyprint>=70",
+    "argon2-cffi",
+    "python-multipart",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["presupuestos", "presupuestos.dominio", "presupuestos.rutas"]
+
+[tool.setuptools.package-data]
+presupuestos = ["schema.sql", "templates/*.html", "templates/fragmentos/*.html", "static/*", "static/fuentes/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
