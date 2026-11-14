@@ -1,0 +1,14 @@
+{% from "fragmentos/_mensajes.html" import mensaje %}
+<section id="totales"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if calc.provisional %}{{ mensaje('aviso', 'Totales provisionales: elige un cliente') }}{% endif %}
+  <table class="totales">
+    <caption class="solo-lector">Totales del presupuesto</caption>
+    <tr><th scope="row">Base imponible</th><td class="importe">{{ calc.base|euros }}</td></tr>
+    <tr><th scope="row">IVA ({{ (calc.tipo_iva if calc.lleva_iva else 0)|porcentaje }})</th><td class="importe">{{ calc.iva|euros }}</td></tr>
+    {% if calc.aplica_retencion %}
+    <tr><th scope="row">Retención IRPF (−{{ calc.tipo_retencion|porcentaje }})</th><td class="importe">{{ (0 - calc.retencion)|euros }}</td></tr>
+    {% endif %}
+    <tr class="total"><th scope="row">Total</th><td class="importe">{{ calc.total|euros }}</td></tr>
+  </table>
+  {% if calc.mencion %}<p class="mencion">{{ calc.mencion }}</p>{% endif %}
+</section>

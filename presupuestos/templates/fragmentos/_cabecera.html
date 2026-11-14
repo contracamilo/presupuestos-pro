@@ -1,0 +1,18 @@
+<section id="cabecera">
+  <div id="error-cabecera" role="alert"></div>
+
+  {% include "fragmentos/_fechas.html" %}
+
+  <label for="tipo_iva">Tipo de IVA</label>
+  <select id="tipo_iva" name="tipo_iva" hx-put="/presupuestos/{{ p.id }}" hx-trigger="change"
+          hx-target="#totales" hx-swap="outerHTML">
+    {% for t in tipos_iva %}<option value="{{ t }}"{% if t == p.tipo_iva %} selected{% endif %}>{{ t|porcentaje }}</option>{% endfor %}
+  </select>
+
+  <h2>Cliente</h2>
+  {% include "fragmentos/_selector_cliente.html" %}
+
+  <label for="notas">Notas y condiciones</label>
+  <textarea id="notas" name="notas" placeholder="Forma de pago, plazos de entrega…"
+            hx-put="/presupuestos/{{ p.id }}" hx-trigger="change" hx-target="#totales" hx-swap="outerHTML">{{ p.notas }}</textarea>
+</section>

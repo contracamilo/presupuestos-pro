@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Historial{% endblock %}
+{% block contenido %}
+<h1>Presupuestos</h1>
+<form method="post" action="/presupuestos" class="acciones">
+  <button type="submit" class="boton">Nuevo presupuesto</button>
+</form>
+
+<label for="buscar">Buscar por número o cliente</label>
+<input type="search" id="buscar" name="q" value="{{ q }}" autocomplete="off"
+       hx-get="/" hx-trigger="input changed delay:300ms, search" hx-target="#lista-presupuestos" hx-swap="outerHTML">
+
+{% include "fragmentos/_historial_lista.html" %}
+{% endblock %}

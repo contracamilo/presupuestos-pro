@@ -1,0 +1,15 @@
+{% from "fragmentos/_mensajes.html" import mensaje %}
+<div id="cliente-actual"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if cliente is none %}
+    <p class="suave">Sin cliente. Búscalo o da de alta uno nuevo.</p>
+  {% elif cliente.anonimizado %}
+    <p><strong>Cliente eliminado</strong></p>
+    {{ mensaje('error', 'Los datos de este cliente se borraron a petición suya: este presupuesto no se puede descargar en PDF.') }}
+  {% else %}
+    <p>
+      <strong>{{ cliente.nombre }}</strong>{% if cliente.archivado %} <span class="suave">(archivado)</span>{% endif %}
+      {% if cliente.nif %}· {% if cliente.tipo_documento %}{{ documento.ETIQUETAS[cliente.tipo_documento] }} {% endif %}{{ cliente.nif }}{% endif %}
+      · <a href="/clientes/{{ cliente.id }}">Editar cliente</a>
+    </p>
+  {% endif %}
+</div>

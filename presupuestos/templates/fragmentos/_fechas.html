@@ -1,0 +1,13 @@
+{# Calendario del navegador (FR-115, R9): valor AAAA-MM-DD; sin calendario, el servidor acepta DD/MM/AAAA. #}
+<div id="fechas" class="rejilla"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div>
+    <label for="fecha_emision">Fecha de emisión</label>
+    <input type="date" id="fecha_emision" name="fecha_emision" value="{{ p.fecha_emision }}"
+           hx-put="/presupuestos/{{ p.id }}" hx-trigger="change" hx-target="#totales" hx-swap="outerHTML">
+  </div>
+  <div>
+    <label for="fecha_validez">Válido hasta</label>
+    <input type="date" id="fecha_validez" name="fecha_validez" value="{{ p.fecha_validez }}" min="{{ p.fecha_emision }}"
+           hx-put="/presupuestos/{{ p.id }}" hx-trigger="change" hx-target="#totales" hx-swap="outerHTML">
+  </div>
+</div>

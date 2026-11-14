@@ -1,0 +1,81 @@
+<section id="lineas">
+  <div id="error-lineas" role="alert"></div>
+  {% for linea, importe in lineas %}
+  <form class="linea" id="linea-{{ linea.id }}" hx-put="/presupuestos/{{ p.id }}/lineas/{{ linea.id }}"
+        hx-trigger="change, submit" hx-target="#lineas" hx-swap="outerHTML">
+    <div class="descripcion">
+      <label for="l{{ linea.id }}-descripcion">Descripción</label>
+      <input type="text" id="l{{ linea.id }}-descripcion" name="descripcion" value="{{ linea.descripcion }}">
+    </div>
+    <div>
+      <label for="l{{ linea.id }}-cantidad">Cantidad</label>
+      <input type="text" inputmode="decimal" id="l{{ linea.id }}-cantidad" name="cantidad" value="{{ linea.cantidad_cent|cantidad }}">
+    </div>
+    <div>
+      <label for="l{{ linea.id }}-unidad">Unidad</label>
+      <select id="l{{ linea.id }}-unidad" name="unidad">
+        <option value="">—</option>
+        {% for u in unidades %}<option value="{{ u }}"{% if linea.unidad == u %} selected{% endif %}>{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="l{{ linea.id }}-precio">Precio unitario (€)</label>
+      <input type="text" inputmode="decimal" id="l{{ linea.id }}-precio" name="precio" value="{{ linea.precio_cent|importe_editable }}">
+    </div>
+    <div class="importe-linea" aria-label="Importe">{{ importe|euros }}</div>
+    <div class="botones">
+      <button type="button" class="boton secundario" hx-post="/presupuestos/{{ p.id }}/lineas/{{ linea.id }}/mover"
+              hx-vals='{"direccion": "arriba"}' hx-target="#lineas" hx-swap="outerHTML" aria-label="Subir">↑</button>
+      <button type="button" class="boton secundario" hx-post="/presupuestos/{{ p.id }}/lineas/{{ linea.id }}/mover"
+              hx-vals='{"direccion": "abajo"}' hx-target="#lineas" hx-swap="outerHTML" aria-label="Bajar">↓</button>
+      <button type="button" class="boton peligro" hx-delete="/presupuestos/{{ p.id }}/lineas/{{ linea.id }}"
+              hx-target="#lineas" hx-swap="outerHTML">Eliminar</button>
+    </div>
+    <div id="error-linea-{{ linea.id }}" class="descripcion" role="alert"></div>
+  </form>
+  {% else %}
+  <p class="suave">Todavía no hay líneas.</p>
+  {% endfor %}
+
+  <h3>Añadir línea</h3>
+  {% if servicios %}
+  <form class="linea" hx-post="/presupuestos/{{ p.id }}/lineas" hx-target="#lineas" hx-swap="outerHTML">
+    <div class="descripcion">
+      <label for="nueva-servicio">Desde el catálogo</label>
+      <select id="nueva-servicio" name="servicio_id">
+        {% for s in servicios %}<option value="{{ s.id }}">{{ s.nombre }} · {{ s.precio_cent|euros }}/{{ s.unidad }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="nueva-servicio-cantidad">Cantidad</label>
+      <input type="text" inputmode="decimal" id="nueva-servicio-cantidad" name="cantidad" value="1">
+    </div>
+    <div class="botones"><button type="submit" class="boton">Añadir desde el catálogo</button></div>
+    <div id="error-catalogo" class="descripcion" role="alert"></div>
+  </form>
+  {% endif %}
+
+  <form class="linea" hx-post="/presupuestos/{{ p.id }}/lineas" hx-target="#lineas" hx-swap="outerHTML">
+    <div class="descripcion">
+      <label for="nueva-descripcion">Descripción (línea manual)</label>
+      <input type="text" id="nueva-descripcion" name="descripcion">
+    </div>
+    <div>
+      <label for="nueva-cantidad">Cantidad</label>
+      <input type="text" inputmode="decimal" id="nueva-cantidad" name="cantidad" value="1">
+    </div>
+    <div>
+      <label for="nueva-unidad">Unidad</label>
+      <select id="nueva-unidad" name="unidad">
+        <option value="">—</option>
+        {% for u in unidades %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="nueva-precio">Precio unitario (€)</label>
+      <input type="text" inputmode="decimal" id="nueva-precio" name="precio" placeholder="0,00">
+    </div>
+    <div class="botones"><button type="submit" class="boton">Añadir línea</button></div>
+    <div id="error-nueva-linea" class="descripcion" role="alert"></div>
+  </form>
+</section>

@@ -1,0 +1,10 @@
+{% for c in clientes %}
+<li>
+  <button type="button" class="boton secundario" hx-put="/presupuestos/{{ presupuesto_id }}" hx-vals='{"cliente_id": "{{ c.id }}"}'
+          hx-target="#totales" hx-swap="outerHTML">
+    <strong>{{ c.nombre }}</strong>{% if c.nif %} · {{ c.nif }}{% endif %}
+  </button>
+</li>
+{% else %}
+{% if q %}<li class="suave">Ningún cliente coincide. Puedes darlo de alta en «Nuevo cliente».</li>{% endif %}
+{% endfor %}

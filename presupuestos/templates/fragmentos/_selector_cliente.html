@@ -1,0 +1,14 @@
+{% include "fragmentos/_cliente_actual.html" %}
+
+<label for="buscar-cliente">Buscar cliente por nombre o NIF</label>
+<input type="search" id="buscar-cliente" name="q" autocomplete="off"
+       hx-get="/clientes/buscar" hx-trigger="input changed delay:300ms, search"
+       hx-vals='{"presupuesto_id": "{{ p.id }}"}' hx-target="#resultados-cliente">
+<ul id="resultados-cliente" class="resultados"></ul>
+
+<details class="plegable" id="nuevo-cliente">
+  <summary>Nuevo cliente</summary>
+  {% with accion_post="/clientes", c=None, presupuesto_id=p.id, id_error="error-cliente-nuevo", objetivo="#totales" %}
+    {% include "fragmentos/_cliente_form.html" %}
+  {% endwith %}
+</details>

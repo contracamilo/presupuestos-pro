@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "fragmentos/_estado.html" import etiqueta_estado %}
+{% block titulo %}{{ p.numero }}{% endblock %}
+{% block contenido %}
+<a class="boton-volver" href="/{% if volver %}?q={{ volver|urlencode }}{% endif %}">← Volver al historial</a>
+<h1 class="titulo-presupuesto">Presupuesto <span class="numero">{{ p.numero }}</span> <span id="estado-presupuesto">{{ etiqueta_estado(estado) }}</span></h1>
+
+{% if requisitos %}
+<div id="requisitos" class="errores" role="alert">
+  <h2>No se puede descargar el PDF:</h2>
+  <ul>{% for r in requisitos %}<li>{{ r }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% include "fragmentos/_cabecera.html" %}
+
+<h2>Líneas</h2>
+{% include "fragmentos/_lineas.html" %}
+
+<h2>Totales</h2>
+{% include "fragmentos/_totales.html" %}
+
+<div class="acciones">
+  <a class="boton" href="/presupuestos/{{ p.id }}/pdf">Descargar PDF</a>
+  <button type="button" class="boton peligro" hx-delete="/presupuestos/{{ p.id }}"
+          hx-confirm="¿Borrar este presupuesto? Su número no se volverá a usar.">Borrar presupuesto</button>
+</div>
+{% endblock %}

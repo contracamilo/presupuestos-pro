@@ -1,0 +1,18 @@
+{% from "fragmentos/_estado.html" import etiqueta_estado %}
+{# Respuesta a un cambio de cabecera o de cliente: totales (destino) + fechas y cliente fuera de banda #}
+{% include "fragmentos/_totales.html" %}
+{% with oob=True %}
+  {% include "fragmentos/_fechas.html" %}
+  {% include "fragmentos/_cliente_actual.html" %}
+{% endwith %}
+<span id="estado-presupuesto" hx-swap-oob="true">{{ etiqueta_estado(estado) }}</span>
+<div id="error-cabecera" role="alert" hx-swap-oob="true"></div>
+<ul id="resultados-cliente" class="resultados" hx-swap-oob="true"></ul>
+{% if reiniciar_nuevo_cliente %}
+<details class="plegable" id="nuevo-cliente" hx-swap-oob="true">
+  <summary>Nuevo cliente</summary>
+  {% with accion_post="/clientes", c=None, presupuesto_id=p.id, id_error="error-cliente-nuevo", objetivo="#totales" %}
+    {% include "fragmentos/_cliente_form.html" %}
+  {% endwith %}
+</details>
+{% endif %}
