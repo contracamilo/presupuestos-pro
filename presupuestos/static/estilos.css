@@ -1,0 +1,339 @@
+/* PresupuestosPro — estilos de la app, mobile-first desde 320 px (FR-031, FR-214, FR-216).
+   Solo usa var(--…) de tokens.css: ningún color, tamaño ni separación escrito aquí (FR-202, FR-203).
+   Componentes y reglas: specs/003-rediseno-visual/contracts/sistema-visual.md. */
+
+/* ================================================================== base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: var(--texto-base);
+  line-height: var(--interlineado);
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  overflow-x: hidden;
+  font-kerning: normal;
+}
+
+img, svg, table, input, select, textarea, button { max-width: 100%; }
+
+h1, h2, h3 { line-height: var(--interlineado-titulo); color: var(--color-texto); }
+h1 { font-size: var(--texto-xl); font-weight: var(--peso-fuerte); margin: 0 0 var(--esp-5); }
+h2 { font-size: var(--texto-lg); font-weight: var(--peso-medio); margin: var(--esp-6) 0 var(--esp-3); }
+h3 { font-size: var(--texto-base); font-weight: var(--peso-medio); margin: var(--esp-5) 0 var(--esp-2); }
+p { margin: 0 0 var(--esp-3); }
+
+a { color: var(--color-marca); text-underline-offset: 0.15em; }
+a:hover { color: var(--color-marca-hover); }
+
+.suave { color: var(--color-texto-suave); }
+.ayuda { color: var(--color-texto-suave); font-size: var(--texto-sm); margin: var(--esp-1) 0 0; }
+
+.icono { flex: none; vertical-align: -0.125em; }
+
+/* ================================================================== accesibilidad (FR-213, FR-214) */
+
+/* Foco visible y común en todos los controles (contraste 8,7:1). */
+:focus-visible { outline: 3px solid var(--color-marca); outline-offset: 2px; }
+
+.solo-lector {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* «Saltar al contenido»: oculto hasta recibir el foco. */
+.saltar {
+  position: absolute; top: var(--esp-2); left: var(--esp-2); z-index: 50;
+  transform: translateY(-200%);
+}
+.saltar:focus { transform: none; }
+main:focus { outline: none; } /* main recibe el foco del enlace, pero no es un control */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ================================================================== disposición */
+
+main {
+  max-width: var(--ancho-contenido);
+  margin: 0 auto;
+  padding: var(--esp-4) var(--esp-4) var(--esp-7);
+}
+
+/* Barra superior y menú lateral (FR-101 a FR-104 de la 002). Punto de corte: 1024 px. */
+.barra {
+  display: flex; align-items: center; gap: var(--esp-3);
+  min-height: calc(var(--alto-control) + var(--esp-4));
+  padding: var(--esp-2) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-fondo-2);
+}
+.marca {
+  font-weight: var(--peso-fuerte); font-size: var(--texto-lg);
+  color: var(--color-texto); text-decoration: none;
+}
+.marca:hover { color: var(--color-marca); }
+
+.boton-menu {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--alto-control); min-height: var(--alto-control); padding: 0;
+  font: inherit; font-size: var(--texto-lg); line-height: 1; cursor: pointer;
+  color: var(--color-texto); background: var(--color-fondo);
+  border: 1px solid var(--color-borde-control); border-radius: var(--radio-md);
+}
+.boton-menu:hover { background: var(--color-fondo-2); }
+
+.menu-lateral {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 30;
+  width: var(--ancho-menu); max-width: 85vw; overflow-y: auto;
+  padding: var(--esp-4) var(--esp-3);
+  background: var(--color-fondo-2); border-right: 1px solid var(--color-borde);
+  box-shadow: var(--sombra);
+  transform: translateX(-100%); visibility: hidden;
+  transition: transform var(--transicion), visibility var(--transicion);
+}
+/* Al abrir, visible al instante (sin transición de visibility) para poder mover el foco al menú. */
+body.menu-abierto .menu-lateral { transform: none; visibility: visible; transition: transform var(--transicion); }
+.menu-lateral ul { list-style: none; margin: 0 0 var(--esp-2); padding: 0; }
+.menu-lateral a {
+  display: flex; align-items: center; min-height: var(--alto-control);
+  padding: var(--esp-2) var(--esp-3); border-radius: var(--radio-md);
+  border-left: 4px solid transparent;
+  color: var(--color-texto); text-decoration: none;
+}
+.menu-lateral a:hover { background: var(--color-fondo); color: var(--color-marca); }
+.menu-lateral a[aria-current="page"] {
+  background: var(--color-marca-claro); border-left-color: var(--color-marca);
+  color: var(--color-marca); font-weight: var(--peso-fuerte);
+}
+.grupo-menu {
+  margin: var(--esp-4) var(--esp-3) var(--esp-1);
+  font-size: var(--texto-xs); font-weight: var(--peso-medio);
+  letter-spacing: var(--espaciado-mayusculas); text-transform: uppercase;
+  color: var(--color-texto-suave);
+}
+.salir { margin: var(--esp-4) var(--esp-3) 0; }
+
+.menu-fondo { position: fixed; inset: 0; z-index: 20; background: var(--color-superposicion); }
+.menu-fondo[hidden] { display: none; }
+body.menu-abierto { overflow: hidden; }
+
+.aviso-conexion {
+  position: sticky; top: 0; z-index: 10;
+  padding: var(--esp-2) var(--esp-4); text-align: center;
+  background: var(--color-error); color: var(--color-sobre-marca); font-weight: var(--peso-medio);
+}
+
+@media (min-width: 1024px) {
+  h1 { font-size: var(--texto-2xl); }
+  main { padding: var(--esp-6) var(--esp-6) var(--esp-7); }
+  .boton-menu, .menu-fondo { display: none; }
+  .menu-lateral { transform: none; visibility: visible; transition: none; box-shadow: none; }
+  body.con-menu .barra, body.con-menu .aviso-conexion { margin-left: var(--ancho-menu); }
+  body.con-menu main { margin-left: var(--ancho-menu); margin-right: 0; }
+  body.menu-abierto { overflow: auto; }
+}
+
+/* ================================================================== botones (FR-206) */
+
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--esp-2);
+  min-height: var(--alto-control); min-width: var(--alto-control);
+  padding: var(--esp-2) var(--esp-4);
+  font: inherit; font-weight: var(--peso-medio); line-height: var(--interlineado-titulo);
+  text-align: center; text-decoration: none; cursor: pointer;
+  color: var(--color-sobre-marca); background: var(--color-marca);
+  border: 1px solid var(--color-marca); border-radius: var(--radio-md);
+}
+.boton:hover { color: var(--color-sobre-marca); background: var(--color-marca-hover); border-color: var(--color-marca-hover); }
+
+.boton.secundario { color: var(--color-marca); background: var(--color-fondo); border-color: var(--color-borde-control); }
+.boton.secundario:hover { color: var(--color-marca-hover); background: var(--color-fondo-2); }
+
+.boton.peligro { color: var(--color-error); background: var(--color-fondo); border-color: var(--color-error); }
+.boton.peligro:hover { color: var(--color-error); background: var(--color-error-fondo); }
+
+.boton:disabled, .boton[aria-disabled="true"] {
+  color: var(--color-texto-suave); background: var(--color-fondo-2);
+  border-color: var(--color-borde-control); cursor: not-allowed;
+}
+
+/* Volver al historial / a clientes (FR-105): variante secundaria con flecha */
+.boton-volver {
+  display: inline-flex; align-items: center; gap: var(--esp-2);
+  min-height: var(--alto-control); margin-bottom: var(--esp-4);
+  padding: var(--esp-2) var(--esp-4);
+  font-weight: var(--peso-medio); text-decoration: none;
+  color: var(--color-marca); background: var(--color-fondo);
+  border: 1px solid var(--color-borde-control); border-radius: var(--radio-md);
+}
+.boton-volver:hover { color: var(--color-marca-hover); background: var(--color-fondo-2); }
+
+.acciones { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); margin-top: var(--esp-4); }
+
+/* ================================================================== formularios (FR-205) */
+
+form { margin: 0; }
+
+label {
+  display: block; margin: var(--esp-4) 0 var(--esp-1);
+  font-size: var(--texto-sm); font-weight: var(--peso-medio);
+}
+label.casilla {
+  display: flex; align-items: center; gap: var(--esp-2);
+  min-height: var(--alto-control); margin: var(--esp-2) 0;
+  font-size: var(--texto-base); font-weight: var(--peso-normal); cursor: pointer;
+}
+label.casilla input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--color-marca); }
+
+input[type=text], input[type=email], input[type=password], input[type=search], input[type=date],
+select, textarea {
+  display: block; width: 100%; min-height: var(--alto-control);
+  padding: var(--esp-2) var(--esp-3);
+  font: inherit; color: var(--color-texto); background: var(--color-fondo);
+  border: 1px solid var(--color-borde-control); border-radius: var(--radio-sm);
+}
+textarea { min-height: 5.5rem; resize: vertical; }
+input[type=file] { font: inherit; max-width: 100%; }
+input::placeholder, textarea::placeholder { color: var(--color-texto-suave); opacity: 1; }
+select:disabled, input:disabled {
+  color: var(--color-texto-suave); background: var(--color-fondo-2); cursor: not-allowed;
+}
+
+[aria-invalid="true"] { border: 2px solid var(--color-error); }
+.error-campo {
+  display: flex; align-items: flex-start; gap: var(--esp-1);
+  margin: var(--esp-1) 0 0; font-size: var(--texto-sm); color: var(--color-error);
+}
+.error-campo .icono { margin-top: 0.15em; }
+
+.rejilla { display: grid; grid-template-columns: 1fr; gap: 0 var(--esp-4); }
+.rejilla > * { min-width: 0; }
+@media (min-width: 640px) { .rejilla { grid-template-columns: 1fr 1fr; } }
+
+details.plegable { margin: var(--esp-3) 0; }
+/* El desplegable conserva su triángulo (display: list-item) y alcanza 44 px de alto con el relleno. */
+details.plegable > summary {
+  display: list-item; width: fit-content; padding: var(--esp-3) var(--esp-1) var(--esp-3) 0;
+  color: var(--color-marca); font-weight: var(--peso-medio); cursor: pointer;
+}
+.alta-usuario > summary { cursor: pointer; }
+.alta-usuario { margin-top: var(--esp-5); }
+.alta-usuario > summary { list-style: none; }
+.alta-usuario > summary::-webkit-details-marker { display: none; }
+.alta-usuario[open] > summary { margin-bottom: var(--esp-2); }
+
+/* ================================================================== mensajes (US1 AS6) */
+
+/* .error y .errores los generan también las rutas en Python (respuestas 422): mismo aspecto. */
+.mensaje, .error, .errores {
+  display: flex; align-items: flex-start; gap: var(--esp-2);
+  margin: var(--esp-3) 0; padding: var(--esp-3) var(--esp-4);
+  border-left: 4px solid currentColor; border-radius: var(--radio-sm);
+}
+.mensaje .icono { margin-top: 0.2em; }
+.mensaje.exito { color: var(--color-exito); background: var(--color-exito-fondo); }
+.mensaje.aviso { color: var(--color-aviso); background: var(--color-aviso-fondo); }
+.mensaje.error, .error, .errores { color: var(--color-error); background: var(--color-error-fondo); }
+.errores { display: block; padding-left: var(--esp-6); }
+.errores li + li { margin-top: var(--esp-1); }
+#requisitos ul { margin: var(--esp-1) 0 0; padding-left: var(--esp-5); }
+#requisitos h2 { margin: 0; font-size: var(--texto-base); color: inherit; }
+
+/* ================================================================== listas y tablas (FR-207) */
+
+.lista { list-style: none; padding: 0; margin: 0; }
+.lista > li {
+  margin-bottom: var(--esp-2); padding: var(--esp-3);
+  border: 1px solid var(--color-borde); border-radius: var(--radio-md); background: var(--color-fondo);
+}
+.lista > li:hover { border-color: var(--color-borde-control); }
+.fila {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: var(--esp-1) var(--esp-3);
+}
+.fila > * { min-width: 0; overflow-wrap: anywhere; }
+a.fila { color: var(--color-texto); text-decoration: none; min-height: var(--alto-control); }
+a.fila strong { color: var(--color-marca); }
+a.fila:hover strong { text-decoration: underline; }
+.dato-secundario { color: var(--color-texto-suave); font-size: var(--texto-sm); }
+.tipo-estado { color: var(--color-texto-suave); font-size: var(--texto-sm); }
+@media (min-width: 760px) { .lista > li { padding: var(--esp-3) var(--esp-4); } }
+
+.importe, .importe-linea {
+  font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; font-weight: var(--peso-medio);
+}
+
+/* Líneas del presupuesto y servicios del catálogo: tarjetas en móvil, filas desde 760 px */
+.linea {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--esp-2) var(--esp-3); align-items: end;
+  margin-bottom: var(--esp-2); padding: var(--esp-3);
+  border: 1px solid var(--color-borde); border-radius: var(--radio-md); background: var(--color-fondo);
+}
+.linea > * { min-width: 0; }
+.linea .descripcion { grid-column: 1 / -1; }
+.linea label {
+  margin: 0 0 var(--esp-1); font-size: var(--texto-xs); font-weight: var(--peso-medio);
+  letter-spacing: var(--espaciado-mayusculas); text-transform: uppercase; color: var(--color-texto-suave);
+}
+.linea .importe-linea { align-self: center; font-size: var(--texto-base); }
+.linea .botones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+@media (min-width: 760px) {
+  .linea { grid-template-columns: 3fr 1fr 1.2fr 1.2fr 1.2fr auto; }
+  .linea .descripcion { grid-column: auto; }
+  .linea .botones { grid-column: auto; }
+  .linea .botones .boton { white-space: nowrap; }
+  #catalogo .linea { grid-template-columns: 2fr 2fr 1fr 1.2fr auto; }
+}
+
+/* Totales (FR-208): «Total» como cifra más destacada del bloque */
+.totales { border-collapse: collapse; margin: var(--esp-3) 0 0 auto; min-width: min(100%, 22rem); }
+.totales th, .totales td { padding: var(--esp-1) 0; vertical-align: baseline; }
+.totales th { text-align: left; font-weight: var(--peso-normal); padding-right: var(--esp-5); }
+.totales td { text-align: right; }
+.totales tr.total th, .totales tr.total td {
+  padding-top: var(--esp-2); border-top: 2px solid var(--color-texto);
+  font-size: var(--texto-lg); font-weight: var(--peso-fuerte);
+}
+.mencion { font-style: italic; color: var(--color-texto-suave); text-align: right; }
+
+/* Selector de cliente */
+.resultados { list-style: none; padding: 0; margin: var(--esp-2) 0; }
+.resultados li + li { margin-top: var(--esp-1); }
+.resultados .boton { width: 100%; justify-content: flex-start; text-align: left; }
+
+.logo-previa {
+  display: block; width: auto; max-width: min(100%, 15rem); max-height: 6rem;
+  margin: var(--esp-2) 0; object-fit: contain;
+}
+
+.entrar { max-width: 24rem; margin: var(--esp-6) auto; }
+
+/* ================================================================== estados del presupuesto (FR-209, FR-210) */
+
+.estado {
+  display: inline-flex; align-items: center; gap: var(--esp-1);
+  min-height: 1.5rem; padding: 0 var(--esp-2);
+  font-size: var(--texto-xs); font-weight: var(--peso-medio); line-height: var(--interlineado-titulo);
+  white-space: nowrap; vertical-align: middle;
+  border: 1px solid currentColor; border-radius: var(--radio-sm);
+}
+.estado .icono { width: 0.875rem; height: 0.875rem; }
+.estado.borrador { color: var(--estado-borrador-texto); background: var(--estado-borrador-fondo); border-style: dashed; }
+.estado.enviado { color: var(--estado-enviado-texto); background: var(--estado-enviado-fondo); }
+.estado.caducado { color: var(--estado-caducado-texto); background: var(--estado-caducado-fondo); font-style: italic; }
+.estado.aceptado { color: var(--estado-aceptado-texto); background: var(--estado-aceptado-fondo); }
+.estado.rechazado { color: var(--estado-rechazado-texto); background: var(--estado-rechazado-fondo); }
+
+.titulo-presupuesto { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); }
+.numero { white-space: nowrap; }
+.titulo-presupuesto .estado { font-size: var(--texto-sm); min-height: 1.75rem; }

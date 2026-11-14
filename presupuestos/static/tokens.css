@@ -1,0 +1,101 @@
+/* PresupuestosPro — Único lugar con colores, tamaños y separaciones de la app y del PDF (FR-202, FR-203).
+   Valores y contrastes: specs/003-rediseno-visual/contracts/sistema-visual.md.
+   El PDF incluye este mismo archivo, con las fuentes insertadas como data: (presupuestos/pdf.py). */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/static/fuentes/Inter-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/static/fuentes/Inter-Italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/static/fuentes/Inter-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/static/fuentes/Inter-Bold.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light;
+
+  /* Color: neutros, marca y significados (contrastes WCAG 2.1 AA comprobados en tests/test_paleta.py) */
+  --color-texto: #1a1f26;
+  --color-texto-suave: #4d5866;
+  --color-marca: #1f4e79;
+  --color-marca-hover: #173b5c;
+  --color-marca-claro: #e3ecf6;
+  --color-borde-control: #7b8794;
+  --color-borde: #d5dae0;
+  --color-fondo: #ffffff;
+  --color-fondo-2: #f4f6f8;
+  --color-sobre-marca: #ffffff;
+  --color-superposicion: rgba(26, 31, 38, .5);
+  --color-sombra: rgba(26, 31, 38, .08);
+  --color-exito: #1b6e3a;
+  --color-exito-fondo: #e6f4ec;
+  --color-aviso: #7a4f00;
+  --color-aviso-fondo: #fff4d6;
+  --color-error: #b3261e;
+  --color-error-fondo: #fbe9e7;
+
+  /* Estados del presupuesto (contracts/estados.md) */
+  --estado-borrador-texto: #4d5866;
+  --estado-borrador-fondo: #eef0f3;
+  --estado-enviado-texto: #1f4e79;
+  --estado-enviado-fondo: #e3ecf6;
+  --estado-caducado-texto: #8a3d00;
+  --estado-caducado-fondo: #fdeedd;
+  --estado-aceptado-texto: #1b6e3a;
+  --estado-aceptado-fondo: #e6f4ec;
+  --estado-rechazado-texto: #b3261e;
+  --estado-rechazado-fondo: #fbe9e7;
+
+  /* Tipografía (FR-201): una familia, seis tamaños */
+  --fuente: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --texto-xs: 0.8125rem;
+  --texto-sm: 0.875rem;
+  --texto-base: 1rem;
+  --texto-lg: 1.25rem;
+  --texto-xl: 1.5rem;
+  --texto-2xl: 1.875rem;
+  --peso-normal: 400;
+  --peso-medio: 600;
+  --peso-fuerte: 700;
+  --interlineado: 1.5;
+  --interlineado-titulo: 1.25;
+  --espaciado-mayusculas: 0.06em;
+
+  /* Espaciado (FR-203): escala de 4 px */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+  --esp-7: 3rem;
+
+  /* Forma y medidas */
+  --radio-sm: 4px;
+  --radio-md: 8px;
+  --sombra: 0 1px 2px var(--color-sombra), 0 2px 8px var(--color-sombra);
+  --ancho-contenido: 60rem;
+  --ancho-menu: 13.75rem;
+  --alto-control: 2.75rem;
+  --transicion: .2s ease;
+}
