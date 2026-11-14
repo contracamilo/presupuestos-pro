@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Presupuesto {{ p.numero }}</title>
+<style>
+  /* Tokens comunes con la app (tokens.css con las fuentes en data:, presupuestos/pdf.py) */
+  {{ estilos_comunes|safe }}
+
+  /* Diseño del PDF: specs/003-rediseno-visual/contracts/pdf-diseno.md. Solo colores de los tokens.
+     El color de marca aparece únicamente en el título, la cabecera de la tabla y la línea del total. */
+  @page { size: A4; margin: 16mm 18mm; }
+  body {
+    margin: 0; font-family: var(--fuente); font-size: 9.5pt; line-height: 1.4;
+    color: var(--color-texto); font-kerning: normal;
+  }
+  .multilinea { white-space: pre-line; }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* 1. Cabecera: logo a la izquierda, emisor a la derecha; sin logo, el emisor ocupa la cabecera */
+  .cabecera {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm;
+    padding-bottom: 5mm; border-bottom: 0.5pt solid var(--color-borde);
+  }
+  .cabecera.sin-logo { justify-content: flex-end; }
+  .logo { flex: none; width: 60mm; height: 25mm; }
+  .logo img { width: 100%; height: 100%; object-fit: contain; object-position: left top; }
+  .emisor { text-align: right; font-size: 8.5pt; color: var(--color-texto-suave); }
+  .emisor strong { display: block; margin-bottom: 1mm; font-size: 11pt; font-weight: var(--peso-medio); color: var(--color-texto); }
+
+  /* 2-3. Título y fechas */
+  h1 {
+    margin: 9mm 0 1.5mm; font-size: 18pt; font-weight: var(--peso-fuerte);
+    letter-spacing: 0.04em; color: var(--color-marca);
+  }
+  .fechas { margin: 0 0 7mm; font-size: 9pt; color: var(--color-texto-suave); }
+
+  /* 4. Cliente */
+  .cliente { margin-bottom: 7mm; padding-left: 3mm; border-left: 1pt solid var(--color-borde-control); font-size: 9pt; }
+  .cliente h2 {
+    margin: 0 0 1mm; font-size: 7.5pt; font-weight: var(--peso-medio);
+    letter-spacing: var(--espaciado-mayusculas); text-transform: uppercase; color: var(--color-texto-suave);
+  }
+  .cliente strong { font-size: 10.5pt; font-weight: var(--peso-medio); }
+
+  /* 5. Líneas */
+  table.lineas { width: 100%; border-collapse: collapse; }
+  table.lineas thead { display: table-header-group; }
+  table.lineas th {
+    padding: 0 1.5mm 1.5mm; text-align: left; font-size: 7.5pt; font-weight: var(--peso-medio);
+    letter-spacing: var(--espaciado-mayusculas); text-transform: uppercase;
+    color: var(--color-marca); border-bottom: 1pt solid var(--color-marca);
+  }
+  table.lineas th.num { text-align: right; }
+  table.lineas td { padding: 2mm 1.5mm; vertical-align: top; border-bottom: 0.3pt solid var(--color-borde); }
+  table.lineas tr { break-inside: avoid; }
+
+  /* 6. Desglose: el «Total» es la cifra más destacada */
+  table.desglose { width: 45%; margin: 5mm 0 0 auto; border-collapse: collapse; break-inside: avoid; }
+  table.desglose th, table.desglose td { padding: 1mm 1.5mm; }
+  table.desglose th { text-align: left; font-weight: var(--peso-normal); }
+  table.desglose tr.total th, table.desglose tr.total td {
+    padding-top: 2mm; font-size: 13pt; font-weight: var(--peso-fuerte);
+    border-top: 1.5pt solid var(--color-marca);
+  }
+
+  /* 7-8. Mención legal y notas */
+  .mencion { margin: 5mm 0 0; font-size: 8.5pt; font-style: italic; color: var(--color-texto-suave); text-align: right; }
+  .notas { margin-top: 8mm; break-inside: avoid; font-size: 9pt; }
+  .notas h2 { margin: 0 0 1mm; font-size: 9pt; font-weight: var(--peso-medio); }
+</style>
+</head>
+<body>
+  <div class="cabecera{% if not logo_uri %} sin-logo{% endif %}">
+    {% if logo_uri %}<div class="logo"><img src="{{ logo_uri }}" alt=""></div>{% endif %}
+    <div class="emisor">
+      <strong>{{ emisor.nombre }}</strong>
+      NIF: {{ emisor.nif }}<br>
+      <span class="multilinea">{{ emisor.direccion }}</span><br>
+      {{ emisor.email }}{% if emisor.telefono %}<br>{{ emisor.telefono }}{% endif %}
+    </div>
+  </div>
+
+  <h1>PRESUPUESTO {{ p.numero }}</h1>
+  <p class="fechas">Fecha de emisión: {{ p.fecha_emision|fecha }} · Válido hasta el {{ p.fecha_validez|fecha }}</p>
+
+  <div class="cliente">
+    <h2>Cliente</h2>
+    <strong>{{ cliente.nombre }}</strong>
+    {% if cliente.nif %}<br>{{ cliente.nif }}{% endif %}
+    {% if cliente.direccion %}<br><span class="multilinea">{{ cliente.direccion }}</span>{% endif %}
+    {% if cliente.pais %}<br>{{ cliente.pais }}{% endif %}
+    {% if cliente.email %}<br>{{ cliente.email }}{% endif %}
+  </div>
+
+  <table class="lineas">
+    <thead>
+      <tr><th scope="col">Descripción</th><th scope="col" class="num">Cantidad</th><th scope="col">Unidad</th><th scope="col" class="num">Precio unitario</th><th scope="col" class="num">Importe</th></tr>
+    </thead>
+    <tbody>
+      {% for linea, importe in lineas %}
+      <tr>
+        <td class="multilinea">{{ linea.descripcion }}</td>
+        <td class="num">{{ linea.cantidad_cent|cantidad }}</td>
+        <td>{{ linea.unidad or '' }}</td>
+        <td class="num">{{ linea.precio_cent|euros }}</td>
+        <td class="num">{{ importe|euros }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="desglose">
+    <tr><th scope="row">Base imponible</th><td class="num">{{ calc.base|euros }}</td></tr>
+    <tr><th scope="row">IVA ({{ (calc.tipo_iva if calc.lleva_iva else 0)|porcentaje }})</th><td class="num">{{ calc.iva|euros }}</td></tr>
+    {% if calc.aplica_retencion %}
+    <tr><th scope="row">Retención IRPF (−{{ calc.tipo_retencion|porcentaje }})</th><td class="num">{{ (0 - calc.retencion)|euros }}</td></tr>
+    {% endif %}
+    <tr class="total"><th scope="row">Total</th><td class="num">{{ calc.total|euros }}</td></tr>
+  </table>
+
+  {% if calc.mencion %}<p class="mencion">{{ calc.mencion }}</p>{% endif %}
+
+  {% if p.notas %}
+  <div class="notas">
+    <h2>Notas y condiciones</h2>
+    <div class="multilinea">{{ p.notas }}</div>
+  </div>
+  {% endif %}
+</body>
+</html>
