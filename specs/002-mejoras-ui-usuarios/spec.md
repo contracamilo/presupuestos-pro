@@ -1,0 +1,228 @@
+# Feature Specification: PresupuestosPro v1.1 — Navegación, formularios y alta de usuarios
+
+**Feature Branch**: `002-mejoras-ui-usuarios`
+
+**Created**: 2026-11-14
+
+**Status**: Draft
+
+**Input**: User description: "quiero iterar sobre un par de cosas en 001-presupuestos-pro debemos tener pestaña o tab de creacion de datos de usuario, los selectores por ejemplo de tipo de documento CIF, deben ser selectores, las fechas deben ser date pickers, si voy a historial deberia tenr un boton de volver o que ver historial se un tab, podriamos tener un menu lateral y un hambrurguer en mobile, tambien en la parte de cliente deberia poder añadir una imagen de logo, deberia poder crear usuarios de manera clara no haciendo comandos de docker"
+
+## Contexto
+
+- **Punto de partida**: esta spec es una iteración sobre `specs/001-presupuestos-pro/spec.md` (PresupuestosPro v1). Todo lo definido allí sigue vigente salvo lo que esta spec cambia de forma explícita.
+- **Problemas detectados al usar v1**:
+  - La navegación es un menú desplegable en la cabecera; no se ve en qué sección se está y, al entrar en un presupuesto desde el historial, no hay una forma clara de volver.
+  - Algunos datos con opciones cerradas se escriben a mano (por ejemplo, el tipo de documento del cliente: NIF, CIF, NIE…), lo que provoca errores.
+  - Las fechas se escriben a mano en formato DD/MM/AAAA, sin calendario.
+  - Las cuentas de usuario no tienen un lugar evidente en la app, y la primera cuenta (titular) solo se puede crear ejecutando un comando en el servidor.
+  - El autónomo no encuentra con claridad dónde subir su propio logo para que salga en el PDF (ya existe en Perfil desde v1, pero no se ve).
+- **Usuarios afectados**: titular y asistentes (uso diario) y administrador técnico (instalación). Ver roles en la spec 001.
+
+## Clarifications
+
+### Session 2026-11-14
+
+- Q: Mientras la instalación no tiene titular, ¿cómo se evita que otra persona lo cree antes desde el navegador? → A: No se protege con código: la pantalla «Crear la cuenta del titular» está abierta y la primera persona que la completa crea el titular. Se acepta el riesgo; la guía de instalación indica crear el titular nada más arrancar el servidor.
+- Q: ¿De quién es el logo que se quería poder subir: de cada cliente o del propio autónomo? → A: Solo del autónomo (emisor), que es el que sale en el PDF. No se añade logo a los clientes; se pide que el logo del Perfil se vea y se suba con claridad.
+- Q: ¿La «pestaña de creación de datos de usuario» es la sección «Usuarios» o una pantalla con pestañas para Perfil, Ajustes y Mi cuenta? → A: Cada opción es una entrada propia del menú lateral (incluida «Usuarios» para dar de alta cuentas); no hay pantalla con pestañas. El menú se ordena en dos grupos: «Trabajo» y «Configuración».
+
+## User Scenarios & Testing *(mandatory)*
+
+### User Story 1 - Navegar con un menú lateral siempre visible (Priority: P1)
+
+Como titular o asistente, quiero un menú lateral con cada sección como entrada propia, ordenadas en «Trabajo» (Presupuestos/Historial, Clientes, Catálogo) y «Configuración» (Perfil, Ajustes, Usuarios, Mi cuenta, Exportar), más «Salir», que me indique en qué sección estoy, y que en el móvil se abra con un botón de menú (hamburguesa), para moverme por la herramienta sin perderme.
+
+**Why this priority**: afecta a todas las pantallas y resuelve el problema de «no sé cómo volver». Es la base sobre la que se apoyan las demás mejoras.
+
+**Independent Test**: en un ordenador, comprobar que el menú lateral está visible en todas las pantallas con la sección actual resaltada; en un móvil de 360 px, comprobar que el menú está oculto, se abre con el botón de hamburguesa y se cierra al elegir una sección.
+
+**Acceptance Scenarios**:
+
+1. **Given** una sesión iniciada en una pantalla de al menos 1024 px de ancho, **When** abro cualquier sección, **Then** veo el menú lateral fijo a la izquierda con todas las secciones a las que tengo acceso, agrupadas en «Trabajo» y «Configuración», y la sección actual resaltada.
+2. **Given** una sesión iniciada en un móvil de 360 px, **When** abro cualquier sección, **Then** el menú lateral está oculto y veo un botón de menú (icono de tres líneas) en la cabecera.
+3. **Given** el móvil con el menú cerrado, **When** pulso el botón de menú, **Then** el menú se despliega por encima del contenido; **When** elijo una sección, pulso fuera del menú o pulso de nuevo el botón, **Then** el menú se cierra.
+4. **Given** una sesión de asistente, **When** veo el menú, **Then** no aparece la sección «Usuarios».
+5. **Given** la pantalla de inicio de sesión (sin sesión), **When** la abro, **Then** no se muestra el menú lateral.
+6. **Given** cualquier sección del menú, **When** la uso con teclado, **Then** puedo abrir y cerrar el menú y llegar a cada sección solo con el teclado.
+
+---
+
+### User Story 2 - Volver al historial desde un presupuesto (Priority: P1)
+
+Como titular o asistente, cuando abro un presupuesto desde el historial, quiero un botón «Volver al historial» bien visible, para regresar a la lista sin usar el botón «atrás» del navegador.
+
+**Why this priority**: el historial es la pantalla de inicio y el punto de entrada a cada presupuesto; quedarse «atrapado» en un presupuesto es el problema de navegación más citado.
+
+**Independent Test**: abrir un presupuesto desde el historial habiendo escrito una búsqueda, pulsar «Volver al historial» y comprobar que se vuelve a la lista con la misma búsqueda aplicada.
+
+**Acceptance Scenarios**:
+
+1. **Given** el historial, **When** abro un presupuesto, **Then** veo en la parte superior un botón «← Volver al historial».
+2. **Given** un presupuesto abierto con cambios recién hechos, **When** pulso «Volver al historial», **Then** vuelvo a la lista y los cambios están guardados (el guardado automático de la spec 001 se mantiene).
+3. **Given** el historial filtrado por «Acme», **When** abro un presupuesto y pulso «Volver al historial», **Then** la lista sigue filtrada por «Acme».
+4. **Given** un presupuesto recién creado con «Nuevo presupuesto», **When** pulso «Volver al historial», **Then** vuelvo a la lista y el presupuesto nuevo aparece en ella.
+
+---
+
+### User Story 3 - Gestionar usuarios desde una sección propia y sin comandos (Priority: P1)
+
+Como titular, quiero una sección «Usuarios» en el menú donde ver, dar de alta, dar de baja y restablecer la contraseña de los asistentes con un formulario claro; y como administrador técnico, quiero crear la cuenta del titular desde el navegador al instalar, sin tener que ejecutar comandos en el servidor.
+
+**Why this priority**: hoy dar de alta la primera cuenta exige conocimientos técnicos (comando en el servidor), lo que bloquea que un autónomo sin perfil técnico ponga en marcha su instalación.
+
+**Independent Test**: con una instalación recién hecha y sin cuentas, abrir la herramienta en el navegador, crear la cuenta del titular siguiendo la pantalla, entrar con ella, ir a «Usuarios» y dar de alta a un asistente; comprobar que el asistente puede entrar.
+
+**Acceptance Scenarios**:
+
+1. **Given** una instalación sin cuenta de titular, **When** abro la herramienta, **Then** veo la pantalla «Crear la cuenta del titular» en lugar de la de inicio de sesión, sin que se me pida ningún código.
+2. **Given** la pantalla «Crear la cuenta del titular», **When** introduzco nombre, email y una contraseña de al menos 10 caracteres repetida dos veces, **Then** se crea el titular, entro directamente en la herramienta y la pantalla de creación deja de estar disponible para siempre.
+3. **Given** ya existe un titular, **When** cualquiera intenta abrir la pantalla «Crear la cuenta del titular», **Then** ve la pantalla de inicio de sesión.
+4. **Given** soy el titular, **When** abro «Usuarios», **Then** veo la lista de cuentas (nombre, email, tipo, activa o dada de baja) y un botón «Añadir usuario».
+5. **Given** «Usuarios», **When** pulso «Añadir usuario» y relleno nombre, email y contraseña inicial (con repetición), **Then** el asistente aparece en la lista y puede entrar con esos datos.
+6. **Given** el formulario de alta con email repetido, contraseña de menos de 10 caracteres o contraseñas que no coinciden, **When** lo envío, **Then** se indica el error junto al campo y no se crea la cuenta.
+7. **Given** un asistente de la lista, **When** pulso «Dar de baja» y confirmo, **Then** se comporta como en la spec 001 (FR-035).
+8. **Given** un asistente de la lista, **When** pulso «Restablecer contraseña» e introduzco una nueva, **Then** se comporta como en la spec 001 (FR-039).
+
+---
+
+### User Story 4 - Elegir opciones cerradas con selectores (Priority: P2)
+
+Como titular o asistente, quiero que todos los datos que tienen opciones cerradas (tipo de documento del cliente, categoría, territorio, país, unidad, tipo de IVA, tipo de retención) se elijan en un selector desplegable, para no cometer errores de escritura.
+
+**Why this priority**: reduce errores en datos que afectan a los impuestos y al PDF, pero la herramienta ya funciona sin ello.
+
+**Independent Test**: dar de alta un cliente y un servicio y comprobar que ninguno de los campos con opciones cerradas permite escribir texto libre.
+
+**Acceptance Scenarios**:
+
+1. **Given** el formulario de cliente, **When** relleno el documento, **Then** primero elijo el tipo de documento en un selector (NIF, CIF, NIE, NIF-IVA UE, Otro documento extranjero) y después escribo el número.
+2. **Given** categoría «Particular», **When** abro el selector de tipo de documento, **Then** solo se ofrecen NIF y NIE.
+3. **Given** territorio «Otro país UE», **When** abro el selector de tipo de documento, **Then** se ofrece «NIF-IVA UE» preseleccionado; con territorio «Fuera de la UE», se ofrece «Otro documento extranjero» preseleccionado.
+4. **Given** el formulario de cliente, **When** elijo el país, **Then** lo hago en un selector con la lista de países en español y con «España» primero; para territorio «Otro país UE» solo se ofrecen países de la UE distintos de España.
+5. **Given** el formulario de servicio o una línea manual, **When** elijo la unidad, **Then** lo hago en un selector (hora, día, proyecto, unidad; en la línea manual, también la opción «—», que significa sin unidad, como en la v1).
+6. **Given** un cliente creado en v1 sin tipo de documento, **When** abro su ficha, **Then** el selector muestra «Sin indicar», el documento escrito se conserva y puedo elegir el tipo y guardar.
+
+---
+
+### User Story 5 - Elegir fechas con un calendario (Priority: P2)
+
+Como titular o asistente, quiero elegir la fecha de emisión y la de validez del presupuesto en un calendario, para no tener que escribirlas a mano.
+
+**Why this priority**: mejora la comodidad y evita fechas mal escritas; las fechas ya se rellenan solas por defecto.
+
+**Independent Test**: en ordenador y en móvil, abrir un presupuesto, cambiar la fecha de emisión con el calendario y comprobar que la validez se recalcula según la spec 001.
+
+**Acceptance Scenarios**:
+
+1. **Given** un presupuesto abierto, **When** pulso en la fecha de emisión o de validez, **Then** se abre un calendario donde elijo el día; la fecha se muestra en formato DD/MM/AAAA.
+2. **Given** emisión 13/11/2026 y validez sin editar a mano con 30 días, **When** elijo 20/11/2026 en el calendario de emisión, **Then** la validez pasa a 20/12/2026 (FR-011 de la spec 001).
+3. **Given** emisión 20/11/2026, **When** abro el calendario de validez, **Then** no puedo elegir días anteriores al 20/11/2026.
+4. **Given** un móvil, **When** pulso en una fecha, **Then** se abre el calendario propio del móvil y no aparece el teclado de texto.
+
+---
+
+### User Story 6 - Subir mi logo de forma clara para que salga en el PDF (Priority: P3)
+
+Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quitar mi logo y cuál tengo ahora, para asegurarme de que mis presupuestos en PDF salen con mi imagen corporativa.
+
+**Why this priority**: la función ya existe en v1 (FR-001, FR-002, FR-021 de la spec 001); solo se mejora su visibilidad.
+
+**Independent Test**: abrir Perfil, subir un logo, descargar un presupuesto y comprobar que el logo aparece en la cabecera del PDF; quitarlo y comprobar que el siguiente PDF de un presupuesto nunca descargado sale sin logo.
+
+**Acceptance Scenarios**:
+
+1. **Given** el Perfil sin logo, **When** lo abro, **Then** veo un apartado «Logo (aparece en tus PDF)» con un botón «Subir logo» y la indicación de formatos y tamaño (PNG, JPG o SVG, hasta 2 MB).
+2. **Given** el Perfil con logo, **When** lo abro, **Then** veo la vista previa del logo actual y los botones «Cambiar logo» y «Quitar logo».
+3. **Given** un logo subido, **When** descargo un presupuesto nunca descargado, **Then** el PDF muestra el logo en la cabecera (CA1 de la spec 001).
+4. **Given** el Perfil con logo, **When** pulso «Quitar logo» y confirmo, **Then** desaparece la vista previa y los presupuestos nunca descargados salen sin logo; los ya descargados conservan el logo con el que salieron (FR-018 de la spec 001).
+
+---
+
+### Edge Cases
+
+- **Pantalla pequeña con menú abierto**: el contenido de detrás no se desplaza mientras el menú está abierto, y no aparece desplazamiento horizontal a partir de 360 px (FR-031 de la spec 001).
+- **Tableta (entre 768 y 1023 px)**: se usa el comportamiento de móvil (botón de menú), para no restar espacio a la tabla de líneas.
+- **Abrir un presupuesto con un enlace directo** (sin pasar por el historial): «Volver al historial» lleva al historial sin filtros.
+- **Volver con cambios aún guardándose**: si un cambio no ha llegado al servidor, se avisa como en la spec 001 («No se ha podido guardar») antes de salir y no se da por guardado. Si el servidor rechaza el cambio por un dato no válido (p. ej., una fecha incorrecta), no se sale del presupuesto y el error se muestra junto al campo.
+- **Dos personas intentan crear el titular a la vez** en una instalación nueva: solo se crea una cuenta de titular; la segunda persona ve la pantalla de inicio de sesión con un aviso de que la cuenta ya existe.
+- **Navegador sin calendario propio**: la fecha se puede seguir escribiendo en DD/MM/AAAA con la validación de la spec 001. En ese caso el campo puede mostrar la fecha guardada en formato AAAA-MM-DD; se acepta para no añadir código ni dependencias (principio I). El resto de pantallas y el PDF siguen mostrando DD/MM/AAAA.
+- **Tipo de documento incoherente tras cambiar categoría o territorio** (p. ej., CIF y se cambia a «Particular»): el selector se vacía y pide elegir de nuevo; el número escrito se conserva.
+- **Copia de seguridad y exportación**: incluyen el tipo de documento de cada cliente.
+- **Restablecer la contraseña del titular** sigue siendo tarea del administrador técnico (FR-039 de la spec 001); esta spec solo elimina el comando para la creación inicial.
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+**Navegación**
+
+- **FR-101**: Con sesión iniciada, todas las pantallas DEBEN mostrar un menú lateral con cada sección como entrada propia, ordenadas en dos grupos con título: **Trabajo** (Presupuestos —el historial—, Clientes, Catálogo) y **Configuración** (Perfil, Ajustes, Usuarios —solo titular—, Mi cuenta, Exportar), y al final «Salir». Sustituye al menú desplegable de la cabecera de v1. No hay pantallas con pestañas.
+- **FR-102**: El menú DEBE resaltar la sección en la que está el usuario; al estar dentro de un presupuesto, se resalta «Presupuestos».
+- **FR-103**: En pantallas de menos de 1024 px de ancho, el menú DEBE estar oculto y abrirse con un botón de menú (hamburguesa) en la cabecera. DEBE cerrarse al elegir una sección, al pulsar fuera de él o al pulsar de nuevo el botón.
+- **FR-104**: El menú y su botón DEBEN poder usarse solo con teclado y estar identificados para lectores de pantalla («Abrir menú» / «Cerrar menú»).
+- **FR-105**: La pantalla de presupuesto DEBE mostrar en la parte superior un botón «← Volver al historial» que lleva al historial conservando la búsqueda que había al abrir el presupuesto; si no la había o se abrió con un enlace directo, lleva al historial sin filtros.
+
+**Usuarios**
+
+- **FR-106**: La sección «Cuentas» de v1 pasa a llamarse «Usuarios» y DEBE mostrar la lista de cuentas (nombre, email, tipo, estado) con un botón «Añadir usuario» que abre un formulario con nombre, email, contraseña inicial y repetición de la contraseña. Solo el titular accede a ella.
+- **FR-107**: Los formularios de cambio y de restablecimiento de contraseña DEBEN pedir también la contraseña nueva dos veces, como el alta de FR-106. En todos ellos, cada error DEBE mostrarse junto a su campo (email repetido, menos de 10 caracteres, contraseñas distintas).
+- **FR-108**: Si la instalación no tiene cuenta de titular (en la práctica, ninguna cuenta: los asistentes solo los puede crear el titular), la herramienta DEBE mostrar, en lugar del inicio de sesión, la pantalla «Crear la cuenta del titular» con nombre, email, contraseña y repetición. Al crearla, el usuario entra directamente. Sustituye la creación por comando de FR-040 de la spec 001; sigue sin existir alta pública de cuentas.
+- **FR-109**: Una vez existe una cuenta de titular, la pantalla «Crear la cuenta del titular» NO DEBE estar disponible para nadie; quien la abra ve el inicio de sesión. Aunque dos personas la envíen a la vez, NUNCA DEBE existir más de un titular.
+- **FR-110**: La pantalla «Crear la cuenta del titular» NO pide código ni otra protección adicional: la primera persona que la completa crea el titular. Mientras exista, es la única pantalla accesible sin sesión además del inicio de sesión, y NO DEBE mostrar ningún dato del autónomo.
+
+**Selectores**
+
+- **FR-111**: Todo dato con opciones cerradas DEBE elegirse con un selector, sin escritura libre: tipo de documento, categoría y territorio del cliente, país del cliente, unidad del servicio y de la línea, tipo de IVA y tipo de retención.
+- **FR-112**: El cliente DEBE tener un campo «Tipo de documento» con las opciones NIF, CIF, NIE, NIF-IVA UE y Otro documento extranjero, seguido del número de documento escrito a mano. Las opciones ofrecidas DEBEN depender de la categoría y el territorio (un Particular solo puede estar en territorios de España, como en la spec 001): Particular → NIF o NIE; Empresa/autónomo en España → NIF, CIF o NIE; Otro país UE → NIF-IVA UE (preseleccionado) u Otro documento extranjero; Fuera de la UE → Otro documento extranjero (preseleccionado). Si un cambio de categoría o territorio deja el tipo elegido fuera de las opciones, el selector se vacía y el número se conserva.
+- **FR-113**: El país del cliente DEBE elegirse de una lista de países en español con «España» en primer lugar. Para territorio «Otro país UE» solo se ofrecen países de la UE distintos de España; para territorios de España, el país es «España» y no se puede cambiar.
+- **FR-114**: Los clientes de v1 sin tipo de documento DEBEN mostrar «Sin indicar» y conservar su número; los clientes de v1 con país escrito a mano que no coincida con la lista DEBEN conservar el texto y mostrar «Revisar país» hasta que se elija uno de la lista. Las reglas de la spec 001 para descargar el PDF (FR-023) no cambian: el número de documento sigue siendo lo que se exige.
+
+**Fechas**
+
+- **FR-115**: Las fechas de emisión y de validez del presupuesto DEBEN poder elegirse con un calendario, en ordenador y en móvil, y mostrarse en formato DD/MM/AAAA en navegadores con calendario propio en español (excepción: ver «Navegador sin calendario propio» en casos límite). El calendario de validez NO DEBE permitir días anteriores a la fecha de emisión. Se mantienen las reglas de FR-011 de la spec 001.
+
+**Logo del emisor**
+
+- **FR-116**: El Perfil DEBE mostrar un apartado «Logo (aparece en tus PDF)» con la indicación de formatos y tamaño permitidos, la vista previa del logo actual si existe y los botones «Subir logo» (sin logo) o «Cambiar logo» y «Quitar logo» (con logo). «Quitar logo» pide confirmación. Las reglas de formato, tamaño y congelación en la primera descarga de la spec 001 (FR-002, FR-018) no cambian.
+- Los clientes NO tienen logo (decisión de la sesión de aclaraciones).
+
+
+### Key Entities
+
+- **Cliente** (cambia): se añade *tipo de documento* (NIF, CIF, NIE, NIF-IVA UE, Otro documento extranjero o sin indicar). El campo «NIF/NIE o NIF-IVA» de v1 pasa a ser el *número de documento*; *país* pasa a elegirse de una lista.
+- **Usuario** (sin cambios en sus datos): cambia solo cómo se crea la cuenta del titular (desde el navegador en la primera puesta en marcha).
+- **Línea de presupuesto / Servicio** (sin cambios en sus datos): la unidad pasa a elegirse con selector.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-101**: Un usuario que no conoce la herramienta llega a cualquier sección y vuelve al historial desde un presupuesto sin usar el botón «atrás» del navegador, en el 100 % de los intentos de una prueba con 5 tareas de navegación.
+- **SC-102**: Una persona sin conocimientos técnicos crea la cuenta del titular en una instalación nueva y da de alta a un asistente en menos de 3 minutos, sin escribir ningún comando.
+- **SC-103**: El 100 % de los campos con opciones cerradas listados en FR-111 se eligen con selector; no queda ninguno de escritura libre.
+- **SC-104**: Cambiar la fecha de emisión de un presupuesto con el calendario lleva menos de 10 segundos en ordenador y en móvil.
+- **SC-105**: En un móvil de 360 px, el menú se abre y se cierra con un toque y ninguna pantalla presenta desplazamiento horizontal.
+- **SC-106**: Tras la actualización, el 100 % de los clientes, presupuestos e importes creados con v1 siguen presentes y con los mismos importes.
+- **SC-107**: Cada escenario de aceptación de esta spec puede comprobarse en la app siguiendo pasos escritos, sin leer código, incluida la creación del titular.
+
+## Assumptions
+
+- Esta iteración no cambia cálculos, numeración, reglas fiscales (RN1–RN11) ni el contenido del PDF.
+- El tipo de documento es informativo: la herramienta sigue sin validar el formato del número (supuesto de la spec 001).
+- El punto de corte entre «móvil» y «escritorio» para el menú es 1024 px; tableta usa el comportamiento de móvil.
+- El calendario puede ser el propio del navegador; no se exige un diseño concreto, solo el comportamiento de US5.
+- La lista de países es la estándar de países en español; la lista de la UE es la vigente a la fecha de la entrega.
+- Las operaciones de copias de seguridad, restauración y restablecimiento de la contraseña del titular siguen siendo tareas del administrador técnico, con los pasos escritos de la spec 001.
+- La guía de administración se actualizará para quitar el comando de creación del titular y para indicar que el titular se cree nada más arrancar el servidor.
+- **Riesgo aceptado (FR-110)**: entre el arranque del servidor y la creación del titular, cualquiera que conozca la dirección podría crear el titular. Se acepta por simplicidad (principio I). Si ocurre, el administrador técnico lo detecta porque no puede crear el titular y reinstala con los datos vacíos (aún no hay datos que perder).
+
+### Fuera de alcance
+
+- Pestañas o vistas nuevas no descritas aquí (p. ej., panel de inicio con resúmenes).
+- Personalizar el orden o los colores del menú.
+- Cambiar los permisos de titular y asistente o añadir roles nuevos.
+- Recuperación de contraseña por email (sigue fuera, como en la spec 001).
+- Validación online del número de documento (VIES u otros).
+- Selector de hora o rangos de fechas en el historial.
+- Logo de los clientes (ni en la herramienta ni en el PDF).
