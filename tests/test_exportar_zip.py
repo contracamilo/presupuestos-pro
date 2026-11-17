@@ -321,3 +321,30 @@ def test_recuento_sin_exportables(titular, conn, perfil):
     html = " ".join(titular.get("/").text.split())
     assert "No hay ningún presupuesto con PDF; la copia llevará solo el archivo de datos." in html
     assert "Descargar .zip (1 archivo)" in html
+
+
+# ---------------------------------------------------------------- T023: errores y volumen
+
+def test_fallo_al_generar_un_pdf(titular, conn, perfil, monkeypatch):
+    escenario_todo(conn)
+
+    def roto(html):
+        raise RuntimeError("fallo de WeasyPrint")
+
+    monkeypatch.setattr("presupuestos.pdf.generar_pdf", roto)
+    antes = _foto(conn)
+    r = titular.post("/exportar", data={"modo": "todo"})
+    assert r.status_code == 500
+    assert r.json() == {"error": "No se ha podido preparar la copia. Inténtalo de nuevo."}
+    assert r.headers["Content-Type"].startswith("application/json")
+    assert _foto(conn) == antes
+
+
+@pytest.mark.parametrize("cantidad", [50, 200])
+def test_volumen(titular, conn, perfil, pdf_falso, cantidad):
+    for i in range(cantidad):
+        crear(conn, f"PRE-2026-{i + 1:03d}", f"Cliente {i % 7}")
+    z = abrir_zip(titular.post("/exportar", data={"modo": "todo"}))
+    pdfs = [n for n in z.namelist() if n.endswith(".pdf")]
+    assert len(pdfs) == cantidad and len(set(pdfs)) == cantidad
+    assert len(z.namelist()) == cantidad + 1

@@ -127,7 +127,7 @@ Proyecto Python único de la 001: `presupuestos/` (aplicación), `tests/`. **No 
 
 ### Tests for User Story 3
 
-- [ ] T023 [P] [US3] En `tests/test_exportar_zip.py` añadir: (a) si `generar_pdf` (parcheado) lanza una excepción, `POST /exportar` devuelve 500 con `{"error": "No se ha podido preparar la copia. Inténtalo de nuevo."}`, **no** devuelve ningún zip y la base de datos queda sin cambios (FR-313); (b) con 50 presupuestos descargados creados por SQL y el PDF parcheado, el zip contiene 50 PDF + 1 JSON con nombres sin repetir; (c) con 200, igual (volumen soportado, spec «Assumptions»)
+- [X] T023 [P] [US3] En `tests/test_exportar_zip.py` añadir: (a) si `generar_pdf` (parcheado) lanza una excepción, `POST /exportar` devuelve 500 con `{"error": "No se ha podido preparar la copia. Inténtalo de nuevo."}`, **no** devuelve ningún zip y la base de datos queda sin cambios (FR-313); (b) con 50 presupuestos descargados creados por SQL y el PDF parcheado, el zip contiene 50 PDF + 1 JSON con nombres sin repetir; (c) con 200, igual (volumen soportado, spec «Assumptions»)
 
 ### Implementation for User Story 3
 
