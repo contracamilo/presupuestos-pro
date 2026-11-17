@@ -12,23 +12,12 @@
 |---|---|---|
 | **Descargado** | `presupuestos.emisor_congelado IS NOT NULL` | Primer filtro de «exportable» |
 | **Exportable (con PDF)** | Descargado **y** `requisitos_descarga(...)` vacío (la descarga individual funcionaría hoy) | Lista de «Seleccionar»; PDF de «Todo»; recuento de la ventana |
-| **Solo en datos** | Presupuesto no exportable (borrador, o descargado con requisito roto, p. ej. cliente anonimizado) | Aparece únicamente en el archivo de datos de «Todo» |
+| **Sin PDF** | Presupuesto no exportable (borrador, o descargado con requisito roto, p. ej. cliente anonimizado) | No se exporta; solo cuenta en el texto «Los X presupuestos sin PDF no se incluirán» |
 | **Selección** | Conjunto de identificadores marcados en la ventana | Existe en la petición; no se guarda |
 
 ## Contenido de la copia
 
-| Elemento | «Todo» | «Seleccionar» |
-|---|---|---|
-| PDF | uno por presupuesto exportable | uno por presupuesto marcado |
-| `perfil`, `ajustes` | sí | `null` |
-| `servicios` (catálogo) | sí | `[]` |
-| `contadores` | sí | `[]` |
-| `clientes` | todos | solo los de los presupuestos marcados |
-| `presupuestos` (con líneas) | todos, incluidos borradores | solo los marcados |
-| `logos` | todos | solo los del emisor fijado de los marcados |
-| `usuarios`, `sesiones`, `intentos_acceso` | nunca | nunca |
-
-Estructura exacta: [contracts/archivo-exportacion.md](./contracts/archivo-exportacion.md).
+Revisión D-004-1: el zip lleva **solo un PDF por presupuesto exportable** («Todo»: todos los exportables; «Seleccionar»: los marcados). No hay archivo de datos, ni cuentas, ni catálogo, perfil, ajustes o contadores. Estructura exacta: [contracts/archivo-exportacion.md](./contracts/archivo-exportacion.md).
 
 ## Reglas
 

@@ -6,7 +6,7 @@ Archivo que el titular o un asistente descargan con todos los datos de negocio. 
 
 ## Archivo
 
-> **Sustituido por la spec 004**: la exportación ya no es un JSON suelto por `GET /exportar`, sino un `.zip` por `POST /exportar`. Ver [archivo-exportacion.md de la 004](../../004-exportar-zip/contracts/archivo-exportacion.md).
+> **Sustituido por la spec 004**: la exportación ya no es un JSON suelto por `GET /exportar`, sino un `.zip` solo con PDF por `POST /exportar` (el archivo de datos se retiró, decisión D-004-1). Ver [archivo-exportacion.md de la 004](../../004-exportar-zip/contracts/archivo-exportacion.md).
 
 - **Ruta**: `GET /exportar` (exige sesión).
 - **Nombre**: `presupuestospro-copia-AAAA-MM-DD.json`.

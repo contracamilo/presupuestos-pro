@@ -1,6 +1,6 @@
 # Contrato: rutas y ventana de exportación
 
-**Requisitos**: FR-301 a FR-315 | **Decisiones**: [research.md](../research.md) E1–E3, E10 | **Base**: [rutas-http de la 001](../../001-presupuestos-pro/contracts/rutas-http.md)
+**Requisitos**: FR-301 a FR-315 (revisados por D-004-1: el zip lleva solo PDF) | **Decisiones**: [research.md](../research.md) E1–E3, E10 | **Base**: [rutas-http de la 001](../../001-presupuestos-pro/contracts/rutas-http.md)
 
 Todas exigen sesión (titular o asistente), como el resto de la app.
 
@@ -23,10 +23,9 @@ El enlace «Exportar» del menú lateral desaparece. Se accede desde el historia
 
 | Estado | Contenido |
 |---|---|
-| **Sin presupuestos** (total = 0) | Solo el aviso «No hay presupuestos que exportar» y «Cerrar». Sin opciones ni «Descargar» (FR-309) |
-| **Normal** | Botón **«Descargar .zip (N archivos)»**, con N = PDF + 1 archivo de datos, actualizado al instante («1 archivo» en singular). Opción **«Todo»** (marcada) con el texto de recuento (FR-310): «Se incluirán N PDF y el archivo de datos. Los X presupuestos sin PDF solo irán en el archivo de datos.» (la segunda frase solo si X > 0). Opción **«Seleccionar qué exportar»**. Botones «Cancelar» y «Descargar .zip» |
-| **Sin exportables** (N = 0) | «Seleccionar» desactivada con el motivo «Aún no hay presupuestos descargados» |
-| **«Seleccionar» elegida** | Lista con una casilla por presupuesto (número, cliente, etiqueta de estado), «Marcar todos», recuento «n marcados» y el aviso de copia parcial (FR-306b): «Esta copia solo incluye los presupuestos marcados; no sirve como copia de seguridad completa.» Con 0 marcados: «Descargar .zip» desactivado y texto «Marca al menos un presupuesto.» |
+| **Sin exportables** (ninguno descargado, o ninguno) | Solo el aviso «No hay presupuestos que exportar», la aclaración «Solo se exportan los presupuestos que ya has descargado en PDF.» y «Cerrar». Sin opciones ni «Descargar» (FR-309) |
+| **Normal** | Botón **«Descargar .zip (N archivos)»**, con N = número de PDF, actualizado al instante («1 archivo» en singular). Opción **«Todo»** (marcada) con el texto de recuento (FR-310): «Se incluirán N PDF.» («Se incluirá 1 PDF.» en singular) y, si X > 0, «Los X presupuestos sin PDF no se incluirán.» («El presupuesto sin PDF no se incluirá.» si X = 1). Opción **«Seleccionar qué exportar»**. Botones «Cancelar» y «Descargar .zip» |
+| **«Seleccionar» elegida** | Lista con una casilla por presupuesto (número, cliente, etiqueta de estado), «Marcar todos», recuento «n marcados». Con 0 marcados: «Descargar .zip» desactivado y texto «Marca al menos un presupuesto.» |
 | **Preparando** | «Descargar .zip» desactivado con «Preparando la copia…» (`aria-busy`); resto de controles desactivados; la ventana no se cierra (ni «Cancelar», ni Esc, ni clic fuera) hasta terminar |
 | **Error** | Mensaje en español en un `role="alert"` dentro de la ventana; la ventana sigue abierta y los controles se reactivan |
 
@@ -50,7 +49,7 @@ Accesibilidad (FR-301c, SC-310): foco atrapado y devuelto al botón «Exportar�
 | `modo` no válido | 422 | «Elige qué exportar.» |
 | `seleccion` sin ids | 422 | «Marca al menos un presupuesto.» |
 | algún id ya no es exportable | 409 | «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.» |
-| sin presupuestos | 422 | «No hay presupuestos que exportar.» |
+| sin presupuestos exportables | 422 | «No hay presupuestos que exportar.» |
 | fallo al generar | 500 | «No se ha podido preparar la copia. Inténtalo de nuevo.» (no queda nada a medias: el zip se arma en memoria y solo se envía completo) |
 
 **Garantías**: solo lectura (FR-305); lectura de un único instante (FR-312); un PDF por presupuesto exportable, idéntico a la descarga individual (FR-304); la exportación no fija emisor ni cambia estados.

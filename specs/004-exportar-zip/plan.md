@@ -6,7 +6,7 @@
 
 ## Summary
 
-Sustituir la exportación en archivo de datos (`GET /exportar`) por un botón «Exportar…» en el historial que abre una ventana previa («Todo» o «Seleccionar qué exportar») y descarga un único `.zip` con los PDF de los presupuestos ya descargados y un archivo de datos.
+Sustituir la exportación en archivo de datos (`GET /exportar`) por un botón «Exportar…» en el historial que abre una ventana previa («Todo» o «Seleccionar qué exportar») y descarga un único `.zip` con los PDF de los presupuestos ya descargados (sin archivo de datos: decisión D-004-1, [research.md](./research.md) E12).
 
 **Enfoque, en una frase**: una ventana `<dialog>` nativa en el historial, una ruta nueva `POST /exportar` que lee todo en una sola transacción de lectura, genera cada PDF con **el mismo código** que la descarga individual y empaqueta con `zipfile` de la biblioteca estándar; la descarga la lanza un pequeño trozo de JavaScript con `fetch` para poder mostrar «Preparando la copia…» y los errores.
 
@@ -16,7 +16,7 @@ Sustituir la exportación en archivo de datos (`GET /exportar`) por un botón «
 |---|---|---|
 | `historial.html` + `_exportar_ventana.html` (nuevo): botón «Exportar…» y `<dialog>` | Paso previo con «Todo» / «Seleccionar» | FR-301, 301a–c |
 | `static/app.js`: abrir/cerrar la ventana, marcar todos, recuento, número de archivos en el botón, envío con `fetch`, estado «Preparando…» y ventana bloqueada mientras se prepara | Estado de espera y errores sin recargar | FR-301c, FR-310a, FR-311, FR-313, FR-313a |
-| `rutas/exportar.py`: `GET /exportar` (JSON) → `POST /exportar` (zip); `datos_exportacion(conn, ids=None)` | Zip único; selección parcial | FR-302, 303, 306, 306a, 314 |
+| `rutas/exportar.py`: `GET /exportar` (JSON) → `POST /exportar` (zip de PDF) | Zip único; selección parcial | FR-302, 303, 314 |
 | `rutas/presupuestos.py`: se extrae `html_pdf(conn, datos)` de `descargar_pdf` (sin cambiar su comportamiento) | El PDF del zip es el mismo que el de la descarga | FR-304 |
 | `dominio/nombre_archivo.py`: `nombre_pdf_zip(numero, cliente)` y `limpiar_nombre` | «número - cliente.pdf» con tildes | FR-307, FR-308 |
 | `templates/base.html`: se retira «Exportar» del menú | Su destino ya no existe | FR-314 |
@@ -51,7 +51,7 @@ No queda ningún «NEEDS CLARIFICATION».
 | **II. Idioma y mercado** | Textos nuevos en español de España; nombre de los PDF con tildes y «ñ» conservadas; fecha del nombre del zip con la fecha de España que ya usa la app. | ✅ |
 | **III. Cero alcance fantasma** | Solo lo de la spec: sin filtros, sin importar, sin copias programadas, sin PDF de borradores. La retirada del enlace «Exportar» del menú y de `GET /exportar` es FR-314. La exclusión de presupuestos cuyo PDF la app no puede generar (cliente anonimizado) es consecuencia de FR-304 y está en la spec (caso límite). | ✅ |
 | **IV. Verificable sin leer código** | [quickstart.md](./quickstart.md) cubre cada escenario y criterio con pasos y resultado observable; los pasos técnicos van marcados «(Técnico)». | ✅ |
-| **V. Datos del usuario con respeto** | Sin datos nuevos; el archivo de datos sigue sin cuentas ni contraseñas; la selección entrega menos datos, no más; nada se guarda en el servidor. | ✅ |
+| **V. Datos del usuario con respeto** | Sin datos nuevos; el zip solo contiene PDF que ya se pueden descargar desde la app (sin cuentas ni contraseñas); nada se guarda en el servidor. | ✅ |
 
 **Re-evaluación tras el diseño (Fase 1)**: ✅ sin cambios. Un punto revisado: la spec habla de «el mismo PDF que genera la app», y el código de la descarga exige condiciones (cliente no anonimizado, NIF, líneas); el plan las aplica igual a la exportación y la spec lo recoge ahora en un caso límite.
 
@@ -67,7 +67,7 @@ specs/004-exportar-zip/
 ├── quickstart.md        # Fase 1: guía de comprobación en la app
 ├── contracts/
 │   ├── rutas-http.md          # Ventana, POST /exportar y retirada de GET /exportar
-│   └── archivo-exportacion.md # Estructura del zip y del archivo de datos (completo y selección)
+│   └── archivo-exportacion.md # Estructura del zip (solo PDF)
 ├── checklists/
 │   └── requirements.md
 └── tasks.md             # Fase 2 (/speckit-tasks; no lo crea este comando)
@@ -78,7 +78,7 @@ specs/004-exportar-zip/
 ```text
 presupuestos/
 ├── rutas/
-│   ├── exportar.py              # POST /exportar (zip); datos_exportacion(conn, ids)
+│   ├── exportar.py              # POST /exportar (zip de PDF); presupuestos_exportables
 │   └── presupuestos.py          # + html_pdf(conn, datos); historial pasa los exportables
 ├── dominio/
 │   └── nombre_archivo.py        # + limpiar_nombre, nombre_pdf_zip
@@ -96,7 +96,7 @@ tests/
 └── test_acceso.py                          # /exportar pasa de GET a POST
 ```
 
-**Structure Decision**: mismo proyecto único. La lógica de qué entra en la copia (presupuestos «exportables», archivo de datos parcial, nombres) vive en `rutas/exportar.py` y `dominio/nombre_archivo.py`; el PDF se reutiliza, no se duplica.
+**Structure Decision**: mismo proyecto único. La lógica de qué entra en la copia (presupuestos «exportables», nombres) vive en `rutas/exportar.py` y `dominio/nombre_archivo.py`; el PDF se reutiliza, no se duplica.
 
 ## Complexity Tracking
 

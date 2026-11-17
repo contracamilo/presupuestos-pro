@@ -13,6 +13,8 @@ description: "Lista de tareas de PresupuestosPro v1.3 — Exportar en un .zip"
 
 **Organization**: tareas agrupadas por historia de usuario; cada historia se puede implementar, verificar y entregar por separado.
 
+> **Revisión D-004-1 (2026-11-17)**: tras probar la ventana, se decidió que el zip lleve **solo los PDF**, sin archivo de datos (JSON). Las tareas T004, T006, T007, T012, T014, T015, T016, T019, T020, T021 y T023 se hicieron como estaban escritas y su parte del archivo de datos quedó **superada** por la T031 (ver [spec.md](./spec.md), aclaración D-004-1, y [research.md](./research.md) E12). La redacción original se conserva como registro histórico.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: se puede hacer en paralelo (archivos distintos, sin dependencias pendientes)
@@ -144,6 +146,7 @@ Proyecto Python único de la 001: `presupuestos/` (aplicación), `tests/`. **No 
 - [X] T027 [P] Actualizar `specs/README.md`: añadir la fila de la 004 (estado «Implementada» solo al terminar, con T-numeros pendientes) y el nuevo recuento de tareas; y en `specs/001-presupuestos-pro/contracts/archivo-exportacion.md` y `rutas-http.md` (línea de `GET /exportar`) añadir una nota «Sustituido por la spec 004» enlazando a los contratos de la 004
 - [X] T028 [P] Revisar `docs/administracion.md` y la propia app (`grep -ri "exportar" presupuestos/templates docs README.md`): cualquier referencia a la descarga del archivo de datos debe apuntar al botón «Exportar…» del historial
 - [X] T029 Ejecutar `.venv/bin/pytest` completo (todo en verde) y `.venv/bin/pytest tests/test_exportar_zip.py -v`
+- [X] T031 Aplicar la decisión D-004-1: quitar el archivo de datos del zip (`datos_exportacion`, `alcance`, `.json`, aviso de copia parcial), exigir presupuestos exportables para exportar (422 si no hay), contar solo PDF en el botón y los textos de la ventana, y actualizar spec, contratos, research (E9, E12), plan, data-model, quickstart y tests
 - [ ] T030 Recorrer [quickstart.md](./quickstart.md) completo (A–H, incluida la prueba con 3 personas de SC-308) en la app, con WeasyPrint real, a 320, 360, 800 y 1280 px, solo teclado y lector de pantalla (§F); anotar cualquier fallo y corregirlo antes de dar la entrega por terminada (constitución, «Verificación de cada entrega»). Marcar en `checklists/exportacion.md` los ítems que el revisor considere satisfechos (solo el revisor las marca)
 
 ---

@@ -9,6 +9,7 @@ Lista separada que exige la constitución («Alcance y propuestas»): las ideas 
 | P3 | Indicador visual de «guardando…» mientras un guardado automático está en curso | Checklist 003, CHK002 | Estilo para el estado de petición en curso de HTMX; no requiere datos | Pendiente |
 | P4 | Documentar el arranque en local en macOS (`brew install pango` y `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`) | Error al descargar el PDF en local tras la 002 | Solo documentación (`docs/` o README); no cambia la app | Pendiente |
 | P5 | Etiqueta «Descargado» en lugar de «Enviado» | Checklist 003, CHK020 | Cambio de una palabra en la spec 003, `dominio/estado.py`, su test y `contracts/estados.md`; decisión de producto | Pendiente de decisión |
+| P6 | Exportar e importar los datos del negocio (catálogo, perfil, clientes, ajustes, contadores) para restaurar la app | Decisión D-004-1 de la spec 004: se quitó el archivo de datos (JSON) del zip porque no lo usaría un autónomo no técnico | Definir un formato de datos propio, pantalla de importación y reglas de conflicto; hoy la única copia de seguridad es `python -m presupuestos copia` | Pendiente |
 
 ## Cómo usar esta lista
 

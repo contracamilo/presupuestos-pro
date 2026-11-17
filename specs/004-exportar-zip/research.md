@@ -36,19 +36,19 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 
 ## E4. Lectura coherente — FR-312
 
-- **Decisión**: abrir una transacción de lectura (`BEGIN`, diferida) y leer **todo** dentro de ella: lista de presupuestos, `cargar_presupuesto` de cada uno, logos y el archivo de datos. En WAL todas las lecturas ven el mismo instante. Se cierra con `ROLLBACK` (no escribe nada) y **después** se generan los PDF a partir de los datos y HTML ya leídos.
+- **Decisión**: abrir una transacción de lectura (`BEGIN`, diferida) y leer **todo** dentro de ella: lista de presupuestos, `cargar_presupuesto` de cada uno y su HTML. En WAL todas las lecturas ven el mismo instante. Se cierra con `ROLLBACK` (no escribe nada) y **después** se generan los PDF a partir de los datos y HTML ya leídos.
 - **Motivo**: generar un PDF puede tardar; no se mantiene una transacción abierta mientras tanto (en WAL no bloquearía a quien escribe, pero una instantánea larga retrasa la limpieza del WAL). El HTML de cada PDF se construye dentro de la transacción; la renderización con WeasyPrint, fuera.
 - **Alternativas descartadas**: sin transacción (la copia podría mezclar instantes); bloqueo exclusivo (impediría trabajar mientras se exporta).
 
 ## E5. Zip con `zipfile` en memoria — FR-302, FR-303, FR-308
 
-- **Decisión**: `zipfile.ZipFile(BytesIO, "w", ZIP_DEFLATED)`; una entrada por PDF y una para el archivo de datos; sin carpetas (los PDF y el archivo de datos en la raíz). Orden: archivo de datos primero y los PDF por número. Los nombres con tildes y «ñ» van en UTF-8 (`zipfile` activa la bandera sola).
+- **Decisión**: `zipfile.ZipFile(BytesIO, "w", ZIP_DEFLATED)`; una entrada por PDF; sin carpetas (los PDF en la raíz), por número de presupuesto. Los nombres con tildes y «ñ» van en UTF-8 (`zipfile` activa la bandera sola).
 - **Motivo**: sin ficheros temporales ni dependencias. El volumen (cientos de PDF de ~50–150 KB) cabe en memoria.
-- **Alternativas descartadas**: fichero temporal en disco (limpieza y permisos); streaming del zip (complejidad sin necesidad con este volumen); `ZIP_STORED` para los PDF (ahorra CPU pero el JSON sí comprime; no merece distinguir).
+- **Alternativas descartadas**: fichero temporal en disco (limpieza y permisos); streaming del zip (complejidad sin necesidad con este volumen); `ZIP_STORED` para los PDF (ahorra algo de CPU pero un PDF ya va comprimido por dentro; no merece distinguir).
 
 ## E6. Qué presupuestos «son exportables» — FR-303, FR-301b, FR-304
 
-- **Decisión**: un presupuesto es **exportable (con PDF)** si `emisor_congelado IS NOT NULL` **y** `requisitos_descarga(perfil_efectivo, cliente, líneas)` devuelve lista vacía, es decir, si la descarga individual funcionaría hoy sin fijar nada nuevo. Esta es la lista de la ventana de selección y la base del recuento de PDF con «Todo». Los demás (borradores, o descargados con cliente anonimizado u otro requisito roto) solo van en el archivo de datos con «Todo».
+- **Decisión**: un presupuesto es **exportable (con PDF)** si `emisor_congelado IS NOT NULL` **y** `requisitos_descarga(perfil_efectivo, cliente, líneas)` devuelve lista vacía, es decir, si la descarga individual funcionaría hoy sin fijar nada nuevo. Esta es la lista de la ventana de selección y la base del recuento de PDF con «Todo». Los demás (borradores, o descargados con cliente anonimizado u otro requisito roto) no se exportan (D-004-1: ya no hay archivo de datos donde llevarlos).
 - **Motivo**: la spec exige «el mismo PDF que genera la app» (FR-304); si la app no puede generarlo, la exportación tampoco. Evita PDF distintos, errores a mitad del zip y cualquier escritura (FR-305).
 - **Hallazgo**: obligó a añadir a la spec el caso límite «cliente anonimizado después de descargar».
 - **Alternativas descartadas**: generar igualmente saltándose los requisitos (PDF que la app no genera: contradice FR-304); fallar toda la exportación (un solo cliente borrado impediría exportar); fijar el emisor de los borradores (rompe FR-305).
@@ -63,16 +63,15 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 ## E8. Nombres de archivo — FR-307, FR-308
 
 - **Decisión**: `nombre_pdf_zip(numero, cliente)` → `«{numero} - {cliente limpio}.pdf»`. `limpiar_nombre` sustituye por un espacio `/ \ : * ? " < > |` y caracteres de control, colapsa espacios, quita puntos y espacios en los extremos, conserva tildes y «ñ» y recorta el cliente a 80 caracteres; si queda vacío, «Sin cliente». Ejemplo: `PRE-2026-001 - Diseño Web S.L.pdf` para «Diseño/Web S.L.» (la `/` pasa a espacio).
-- **Nombres del zip**: `presupuestospro-copia-AAAA-MM-DD.zip` (Todo) y `presupuestospro-seleccion-AAAA-MM-DD.zip` (Seleccionar), con `fechas.hoy()`. El archivo de datos lleva el mismo nombre base con `.json`.
+- **Nombres del zip**: `presupuestospro-copia-AAAA-MM-DD.zip` (Todo) y `presupuestospro-seleccion-AAAA-MM-DD.zip` (Seleccionar), con `fechas.hoy()`.
 - **Convive** con `nombre_pdf` (FR-022 de la 001, descarga individual), que no cambia.
 - **Unicidad**: el número es único por presupuesto, así que no hay nombres repetidos aunque dos clientes se llamen igual.
 - **Alternativas descartadas**: reutilizar `nombre_pdf` (quita tildes y usa guiones: contradice FR-307); normalizar a ASCII (pierde «ñ»).
 
-## E9. Archivo de datos completo y de selección — FR-306, FR-306a
+## E9. Archivo de datos completo y de selección — RETIRADA por D-004-1
 
-- **Decisión**: `datos_exportacion(conn, ids=None)`. Con `ids=None` produce lo de hoy más `"alcance": "completo"`. Con `ids`: `"alcance": "seleccion"`, `presupuestos` filtrados (con líneas), `clientes` solo los referenciados, `logos` solo los del emisor fijado de esos presupuestos, `servicios` y `contadores` vacíos y `perfil` y `ajustes` a `null`. Mismas claves, mismo `version: 2`, para que un futuro importador distinga por `alcance`.
-- **Motivo**: FR-306a (sin catálogo, ajustes ni contadores) y un formato estable.
-- **Alternativas descartadas**: quitar las claves en la selección (obliga al lector a comprobar su existencia); subir `version` (el cambio es solo aditivo).
+- **Decisión original** (descartada): `datos_exportacion(conn, ids=None)` con campo `alcance` («completo» / «seleccion»), `perfil`/`ajustes` a `null` y `servicios`/`contadores` vacíos en la selección, para un futuro importador (FR-306, FR-306a). Se implementó (T004) y se retiró después.
+- **Por qué se retiró**: ver E12.
 
 ## E10. Retirar la exportación suelta — FR-314
 
@@ -81,4 +80,12 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 
 ## E11. Pruebas
 
-- **Decisión**: pytest, sin WeasyPrint (como `test_pdf_contenido.py`): se sustituye `generar_pdf` por un doble que devuelve bytes con el HTML. Cubre: contenido y nombres del zip, selección (PDF y archivo de datos), borradores, cliente anonimizado, solo lectura (estado y `emisor_congelado` intactos), sin presupuestos, acceso sin sesión y de asistente, y los nombres conflictivos (`dominio`). La ventana, el estado «Preparando…» y la descarga real se comprueban a mano en el quickstart (principio IV).
+- **Decisión**: pytest, sin WeasyPrint (como `test_pdf_contenido.py`): se sustituye `generar_pdf` por un doble que devuelve bytes con el HTML. Cubre: contenido y nombres del zip, selección, borradores, cliente anonimizado, solo lectura (estado y `emisor_congelado` intactos), sin presupuestos, acceso sin sesión y de asistente, y los nombres conflictivos (`dominio`). La ventana, el estado «Preparando…» y la descarga real se comprueban a mano en el quickstart (principio IV).
+
+## E12. Decisión D-004-1: el zip lleva solo los PDF (sin archivo de datos) — 2026-11-17
+
+- **Qué se decidió**: tras probar la ventana en la app, el titular decidió que **el archivo de datos (JSON) sobra**: un autónomo no técnico, ni su cliente, haría nada con él. El zip contiene únicamente los PDF de los presupuestos exportables.
+- **Qué cambia**: se eliminan `datos_exportacion`, el campo `alcance`, el nombre `.json`, FR-306/306a/306b y el aviso «no sirve como copia de seguridad». «Todo» = todos los PDF exportables; borradores y presupuestos sin PDF no se exportan. Sin presupuestos exportables no hay nada que descargar (la ventana solo avisa; la ruta devuelve 422). El número de archivos del botón cuenta solo PDF. `resumen_exportacion` devuelve `sin_pdf` (antes `solo_datos`).
+- **Qué no cambia**: ruta `POST /exportar`, modos «todo»/«seleccion», regla de «exportable» (E6), transacción de lectura (E4), nombres de PDF y del zip (E8), solo lectura, `python -m presupuestos copia` (copia de la base de datos, 001 FR-041), que sigue siendo la única copia de seguridad.
+- **Alternativas descartadas**: dejar el JSON (sin valor para el usuario y obliga a mantener un formato); quitarlo de la interfaz pero conservar `datos_exportacion` (código sin uso: contra el principio I).
+- **Consecuencia para el futuro**: una spec de importación tendrá que definir su propio formato.
