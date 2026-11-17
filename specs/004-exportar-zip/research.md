@@ -58,6 +58,7 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 - **Decisión**: extraer de `descargar_pdf` una función `html_pdf(conn, datos) -> str` (contexto + plantilla `pdf.html`, incluida la lectura del logo) que usan la descarga individual y el zip; después, `generar_pdf(html)` igual que hoy. La descarga individual conserva su orden: comprobar requisitos → fijar emisor → `html_pdf` → `generar_pdf`.
 - **Motivo**: garantizar por construcción que ambos PDF son el mismo documento, con importes idénticos al céntimo (SC-303).
 - **Nota de rendimiento**: la ruta es síncrona (`def`), así que FastAPI la ejecuta en su grupo de hilos y no bloquea a los demás usuarios. 50 presupuestos son 50 renderizados secuenciales; se mide en el quickstart. Sin paralelismo ni caché (principio I).
+- **Medición (T025, 2026-11-17)**: 50 presupuestos descargados de 6 líneas cada uno, WeasyPrint 70 real en macOS (`DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`), petición `POST /exportar` con `modo=todo` por `TestClient` (sin navegador): **23,7 s**, 50 PDF + 1 JSON, zip de 0,8 MB. Muy por debajo del umbral orientativo de 120 s; con la ventana en «Preparando la copia…» es aceptable. Medido sobre una base de datos sintética; el recorrido en el navegador (quickstart §E1) se hace en la T030.
 
 ## E8. Nombres de archivo — FR-307, FR-308
 
