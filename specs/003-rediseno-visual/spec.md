@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+**Enmienda (2026-11-17)**: la [spec 002, ampliación de modo oscuro](../002-mejoras-ui-usuarios/spec.md) (US7, FR-117 a FR-130) añade un tema oscuro conmutable como segunda paleta de este sistema visual. Quedan modificados el caso límite «Navegador con modo oscuro del sistema», el supuesto «Sin modo oscuro», la exclusión «Modo oscuro» de Fuera de alcance y la lectura de FR-202 («único lugar»). El resto de esta spec no cambia; el PDF sigue teniendo solo la paleta clara.
+
 **Input**: User description: "rediseñar la apariencia visual de toda la aplicación para que resulte profesional y sobria: tipografía consistente, paleta de colores limitada definida en un único lugar, espaciado uniforme, jerarquía visual clara entre títulos, tablas, formularios y totales, y estados visuales distinguibles para los presupuestos (Borrador, Enviado, Aceptado, Rechazado, Caducado). El rediseño debe aplicarse también a la plantilla del PDF para que el documento que recibe el cliente transmita la misma imagen profesional. Debe mantenerse el enfoque mobile-first ya existente y todos los textos en español de España. La lógica de negocio, los cálculos, la API y el esquema de datos no deben cambiar en absoluto, de cumplir criterios minimos y buenas practicas de accesibilidad"
 
 ## Contexto
@@ -108,7 +110,7 @@ Como persona que usa el teclado, un lector de pantalla, el zoom del navegador o 
 - **Presupuesto sin cliente o sin líneas**: los bloques vacíos se ven ordenados (mensaje en texto suave), sin huecos ni bordes descolgados.
 - **Cliente anonimizado**: el aviso existente («Cliente eliminado…») conserva su significado y se ve con el estilo de aviso común.
 - **Logo con proporciones extremas** (muy ancho o muy alto, SVG sin tamaño): se limita a un área máxima sin deformarse, en la pantalla de Perfil y en el PDF.
-- **Navegador con modo oscuro del sistema**: la app se sigue viendo con su paleta clara y legible (no se pide modo oscuro; ver Supuestos); los controles nativos no quedan ilegibles.
+- **Navegador con modo oscuro del sistema**: *(enmendado 2026-11-17)* lo regula la spec 002 (FR-122 a FR-124): con «Como el sistema», que es el valor por defecto, la app se ve en oscuro; con «Claro», se sigue viendo con su paleta clara y legible. En ambos casos los controles nativos no quedan ilegibles.
 - **Tamaño de letra del navegador aumentado** (p. ej. 20 px por defecto): la app respeta la preferencia y escala sin solapamientos.
 - **Impresión de una pantalla** (no del PDF): no es un objetivo; no debe empeorar respecto a v1.1.
 - **Presupuestos ya descargados antes del rediseño**: al volver a descargarlos, el PDF sale con el nuevo diseño y con los mismos datos congelados (FR-018 de la 001); los PDF ya enviados no cambian.
@@ -122,7 +124,7 @@ Como persona que usa el teclado, un lector de pantalla, el zoom del navegador o 
 **Sistema visual común**
 
 - **FR-201**: La app y el PDF DEBEN usar una única familia tipográfica libre (de licencia que permita distribuirla), incluida con la aplicación, para todo el texto; DEBE verse igual en cualquier dispositivo y en el PDF generado en cualquier servidor, sin depender de las fuentes instaladas. La familia DEBE incluir los caracteres del español (tildes, «ñ», «ü», «¿», «¡», «€», «·», «—») y cifras de ancho fijo para alinear importes. La escala de tamaños DEBE ser cerrada, de como máximo 6 tamaños de texto, usada igual en todas las pantallas.
-- **FR-202**: La paleta de colores DEBE estar definida en un único lugar y todas las pantallas DEBEN usar solo colores de esa paleta. La paleta DEBE ser limitada: un color de marca/acción, una escala de neutros (texto, texto suave, bordes, fondos) y un color por cada significado (éxito, aviso, error) y por cada estado de presupuesto mostrable. Cambiar un color en ese lugar DEBE cambiarlo en toda la app.
+- **FR-202**: La paleta de colores DEBE estar definida en un único lugar y todas las pantallas DEBEN usar solo colores de esa paleta. La paleta DEBE ser limitada: un color de marca/acción, una escala de neutros (texto, texto suave, bordes, fondos) y un color por cada significado (éxito, aviso, error) y por cada estado de presupuesto mostrable. Cambiar un color en ese lugar DEBE cambiarlo en toda la app. *(Desde 2026-11-17, la variante oscura de la paleta de la spec 002, FR-128, forma parte de ese mismo lugar: mismos nombres de color, y ningún otro sitio define colores.)*
 - **FR-203**: El espaciado (márgenes, separaciones entre campos, secciones y elementos de lista) DEBE seguir una escala única y cerrada, definida en el mismo lugar que la paleta y aplicada igual en todas las pantallas.
 - **FR-204**: La app DEBE tener una jerarquía visual constante: título de pantalla (uno por pantalla) › título de sección › texto normal › texto secundario. Los títulos de pantalla y de sección DEBEN verse igual en todas las pantallas.
 - **FR-205**: Los formularios DEBEN tener un aspecto común: etiqueta encima del campo, texto de ayuda debajo con estilo secundario, mensaje de error debajo del campo con estilo de error e icono o prefijo textual, campos con el mismo alto, borde y radio, y estado de foco visible.
@@ -180,7 +182,7 @@ Como persona que usa el teclado, un lector de pantalla, el zoom del navegador o 
 
 - **Nivel de accesibilidad**: «criterios mínimos y buenas prácticas» se interpreta como el nivel AA de las pautas WCAG 2.1, la referencia habitual en España (norma UNE-EN 301 549). No se persigue el nivel AAA.
 - **Tipografía**: una fuente libre incluida con la aplicación (FR-201); la familia concreta se elige en el plan entre las que cumplan los requisitos de caracteres y cifras. Si la fuente no llegara a cargarse en un dispositivo, la app sigue siendo legible con una fuente de reserva del sistema.
-- **Sin modo oscuro**: la app mantiene un único tema claro. Un modo oscuro no se pide y sería alcance nuevo (principio III).
+- **Modo oscuro** *(enmendado 2026-11-17)*: esta spec definió un único tema claro. El modo oscuro entró después como alcance nuevo en la spec 002 (US7): es una segunda paleta con los mismos nombres de color, que cumple los mismos contrastes (FR-212) y no cambia tipografía, tamaños, separaciones ni el PDF.
 - **Sin personalización por autónomo**: la paleta es la misma para todas las instalaciones; no se adapta a los colores de la marca de cada autónomo (no se pide). El logo del autónomo sigue siendo su elemento de marca en el PDF.
 - **Iconos**: si se usan, son pocos, sencillos y van incluidos con la aplicación; nunca sustituyen al texto.
 - **Marcado HTML**: cambiar la estructura de las plantillas (clases, encabezados, envoltorios) para aplicar el diseño o mejorar la accesibilidad se considera parte del rediseño y no un cambio de la API (FR-215).
@@ -190,7 +192,7 @@ Como persona que usa el teclado, un lector de pantalla, el zoom del navegador o 
 ### Fuera de alcance
 
 - Cualquier cambio en cálculos, reglas fiscales, numeración, rutas, datos guardados o exportación (FR-215).
-- Modo oscuro, temas o colores personalizables por autónomo.
+- Temas adicionales o colores personalizables por autónomo. *(Enmendado 2026-11-17: el modo oscuro ya no está fuera de alcance; lo define la spec 002, US7.)*
 - Nuevas pantallas, filtros del historial por estado, acciones nuevas sobre los presupuestos o cambios de flujo.
 - Marcar presupuestos como Aceptado o Rechazado (requiere guardar un dato nuevo); solo se dejan diseñadas sus etiquetas (FR-209a).
 - Cambios en el contenido del PDF (bloques, textos, orden) o numeración de páginas.

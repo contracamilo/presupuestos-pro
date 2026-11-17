@@ -52,6 +52,13 @@ Las rutas `/cuentas*` desaparecen (404).
 |---|---|
 | `POST /perfil/logo/quitar` **(nueva)** | Tras confirmación (`hx-confirm`): `perfil.logo_id = NULL` → vuelve a `/perfil` con «Logo quitado.» (FR-116, R10) |
 
+## Tema (ampliación 2026-11-17)
+
+| Método y ruta | Cambio |
+|---|---|
+| `POST /tema` **(nueva)** | Guarda la preferencia de tema en la cookie `tema`. Requiere sesión y origen propio. 204 si la envía `app.js`; 303 a la pantalla de origen sin JS; 422 con un valor desconocido. Detalle en [tema.md](./tema.md#ruta) (FR-117 a FR-122, R12, R15) |
+| Todas las páginas completas (`base.html`) | Cargan `/static/tokens-oscuro.css` con `media` según el tema y ajustan `<meta name="color-scheme">` ([tema.md](./tema.md#cómo-se-pinta-cada-página-fr-123-fr-125-fr-126)) |
+
 ## Archivo de exportación
 
 Sobre [archivo-exportacion.md de la 001](../../001-presupuestos-pro/contracts/archivo-exportacion.md):

@@ -109,6 +109,32 @@ Rutas en [contracts/cambios-rutas-y-pantallas.md](./contracts/cambios-rutas-y-pa
 | E5 | Anonimizar un cliente con tipo de documento | El tipo queda «Sin indicar» junto con el resto de datos borrados |
 | E6 | Repetir los escenarios de la [guía de la 001](../001-presupuestos-pro/quickstart.md), sustituyendo «Cuentas» por «Usuarios» y el alta del titular por B1–B3 | Mismos resultados (sin regresiones en cálculo, PDF, numeración y acceso) |
 
+### F. Modo oscuro (US7, ampliación 2026-11-17)
+
+Selector, ruta, cookie y paleta en [contracts/tema.md](./contracts/tema.md).
+
+**Preparación**: sesión de titular; un presupuesto en borrador con dos líneas y cliente «Acme SL»; en el historial, presupuestos en estado Borrador, Enviado y Caducado; un logo PNG negro con fondo transparente. Para cambiar el modo del dispositivo: en macOS, *Ajustes del Sistema → Apariencia*; en Windows, *Configuración → Personalización → Colores*; en Android/iOS, el ajuste «Modo oscuro».
+
+| # | Pasos | Resultado esperado |
+|---|---|---|
+| F1 | Abrir el menú lateral y localizar el selector | Al final de «Configuración», antes de «Salir», un grupo «Tema» con «Claro», «Oscuro» y «Como el sistema»; si nunca se eligió, está marcado «Como el sistema» (FR-117, US7 AS6) |
+| F2 | Con la app en claro, elegir «Oscuro» | Toda la pantalla pasa a oscuro al momento, sin recargar (US7 AS1). Cronometrar: un toque, < 5 s (SC-108) |
+| F3 | Abrir el presupuesto, empezar a escribir una línea nueva sin salir del campo y cambiar de tema dos veces | La línea y lo escrito siguen ahí; los totales no cambian; al salir del campo se guarda con normalidad (US7 AS2, FR-118) |
+| F4 | Con «Oscuro»: recargar; ir a Clientes; cerrar el navegador por completo, volver a abrirlo y entrar | La app sigue en oscuro en los tres casos (US7 AS3, SC-112) |
+| F5 | Con «Oscuro», recargar varias veces seguidas Presupuestos, Clientes y Perfil | En ningún momento se ve un destello blanco (US7 AS11, FR-126) |
+| F6 | Elegir «Como el sistema» con el dispositivo en claro; sin tocar la app, poner el dispositivo en oscuro y luego otra vez en claro | La app cambia a oscuro y vuelve a claro sola (US7 AS4, FR-123) |
+| F7 | Con el dispositivo en oscuro, elegir «Claro» en la app y recargar | La app se ve en claro y sigue en claro tras recargar (US7 AS5, FR-124) |
+| F8 | Con la app en oscuro, descargar el PDF del presupuesto; poner la app en claro y descargarlo otra vez | Los dos PDF tienen fondo blanco y se ven iguales (US7 AS7, SC-111, FR-130) |
+| F9 | En oscuro, a 360 px y a 1280 px: recorrer todas las pantallas del menú, abrir el menú en móvil, provocar un error de formulario (cantidad 0), abrir la ventana «Exportar…», el aviso de confirmación de «Quitar logo» y mirar el historial con Borrador, Enviado y Caducado | Todo se lee bien; no queda ningún fondo blanco suelto ni texto oscuro sobre fondo oscuro; las tres etiquetas de estado se distinguen entre sí por texto, icono y forma (US7 AS8, FR-125, SC-109) |
+| F10 | En oscuro: abrir el calendario de «Fecha de emisión» y el selector «Categoría» de un cliente | Se muestran en oscuro y legibles (US7 AS9, FR-125) |
+| F11 | Solo con teclado (y con lector de pantalla si es posible): llegar al selector con Tab, cambiar de opción con las flechas | El foco se ve en los dos temas; el lector anuncia «Tema», la opción y que está seleccionada; el tema cambia al moverse (US7 AS10, FR-119) |
+| F12 | En oscuro, subir en Perfil el logo negro transparente | La vista previa se ve con claridad sobre fondo blanco (US7 AS12, FR-129) |
+| F13 | Desactivar JavaScript en el navegador, recargar, elegir «Claro» y pulsar «Aplicar» | Se recarga la misma pantalla en claro; tras volver a activar JavaScript el botón «Aplicar» no se ve (FR-120) |
+| F14 | Cerrar sesión con «Oscuro» elegido y el dispositivo en claro | La pantalla de inicio de sesión se ve en claro y sin selector; al entrar de nuevo la app vuelve a oscuro (FR-124, caso límite «Cerrar sesión») |
+| F15 | Abrir la app en una ventana privada y entrar | Tema «Como el sistema» (caso límite «Navegador que borra sus datos o ventana privada») |
+| F16 | Con «Oscuro», desconectar la red (modo avión) y elegir «Claro» | La página cambia a claro y aparece «No se ha podido guardar. Comprueba tu conexión.»; al reconectar y recargar vuelve a oscuro ([tema.md](./contracts/tema.md#selector-tema-fr-117-a-fr-120)) |
+| F17 | **(Técnico)** `docker compose exec app pytest tests/test_paleta.py tests/test_tema.py` | Pasan: contrastes de los dos temas, paleta oscura completa, PDF sin hoja oscura, ruta `/tema` y cookie (SC-110) |
+
 ## 4. Comprobación de los criterios de éxito
 
 | Criterio | Escenarios |
@@ -119,4 +145,9 @@ Rutas en [contracts/cambios-rutas-y-pantallas.md](./contracts/cambios-rutas-y-pa
 | SC-104 | D6, D8 |
 | SC-105 | A2, A3 |
 | SC-106 | E1 |
-| SC-107 | Toda esta guía (solo 1a, 1b y E1 son técnicos: instalación y actualización del servidor) |
+| SC-107 | Toda esta guía (solo 1a, 1b, E1 y F17 son técnicos: instalación, actualización del servidor y comprobación automática de contrastes) |
+| SC-108 | F2 |
+| SC-109 | F9 |
+| SC-110 | F17 (además, cualquier comprobador de contraste sobre la tabla de [tema.md](./contracts/tema.md#pares-de-contraste-en-oscuro-fr-127)) |
+| SC-111 | F8 |
+| SC-112 | F4, F5 |

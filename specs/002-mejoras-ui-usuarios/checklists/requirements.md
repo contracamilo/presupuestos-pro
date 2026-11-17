@@ -32,4 +32,5 @@
 ## Notes
 
 - Iteración 1: quedan 3 preguntas abiertas (Q1 protección de la pantalla de creación del titular — FR-110/US3 AS1; Q2 logo del cliente en el PDF — FR-119/US6 AS5; Q3 alcance de la «pestaña de datos de usuario» — FR-120). Pendientes de respuesta del usuario.
+- Ampliación 2026-11-17 (modo oscuro, US7, FR-117–FR-130, SC-108–SC-112), iteración 1: todos los puntos pasan salvo un [NEEDS CLARIFICATION] en FR-121 (¿la preferencia de tema se recuerda por usuario o por dispositivo?). Iteración 2: resuelto → por dispositivo (Clarifications, sesión 2026-11-17); casos límite, entidad y fuera de alcance ajustados. Todos los puntos pasan. Las demás preguntas abiertas de `modo-oscuro-dpec.md` se resolvieron con su recomendación: selector en el menú lateral (FR-117), tres opciones (Assumptions), sin selector en pantallas sin sesión (FR-124), color de marca aclarado en oscuro (Assumptions).
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`

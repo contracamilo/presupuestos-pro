@@ -1,6 +1,6 @@
-# Implementation Plan: PresupuestosPro v1.1 — Navegación, formularios y alta de usuarios
+# Implementation Plan: PresupuestosPro v1.1 — Navegación, formularios, alta de usuarios y modo oscuro
 
-**Branch**: `002-mejoras-ui-usuarios` | **Date**: 2026-11-14 | **Spec**: [spec.md](./spec.md)
+**Branch**: `002-mejoras-ui-usuarios` (ampliación de modo oscuro: `005-modo-oscuro`) | **Date**: 2026-11-14, ampliado 2026-11-17 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/002-mejoras-ui-usuarios/spec.md`
 
@@ -22,6 +22,23 @@ Iteración sobre la aplicación de la 001, ya implementada: menú lateral con bo
 
 Detalle y alternativas descartadas en [research.md](./research.md) (R1–R11).
 
+### Ampliación 2026-11-17: modo oscuro (US7, FR-117 a FR-130)
+
+Selector «Tema» (Claro / Oscuro / Como el sistema) en el menú lateral, cambio inmediato sin perder datos, elección recordada por dispositivo, sin destello al cargar y PDF siempre en claro.
+
+**Enfoque, en una frase**: una segunda hoja de colores (`tokens-oscuro.css`) que `base.html` carga con un `media` distinto según la cookie `tema`; el servidor pinta cada página ya con el tema correcto y el navegador se encarga de seguir al sistema. Sin dependencias, sin cambios en la base de datos y sin tocar el PDF.
+
+| Cambio | Por qué | Requisito |
+|---|---|---|
+| `static/tokens-oscuro.css` (nuevo): todas las variables de color con valores oscuros y `color-scheme: dark` | Paleta oscura en un único lugar, que el PDF nunca lee | FR-125, FR-127, FR-128, FR-130 (R13, R16) |
+| `base.html`: `<link id="tokens-oscuro" media=…>` y `<meta name="color-scheme">` según el tema | Sin destello; «Como el sistema» lo resuelve el navegador; controles nativos en oscuro | FR-123, FR-125, FR-126 (R14) |
+| `POST /tema` (nueva) y cookie `tema` | Recordar la elección por dispositivo, también sin JS | FR-120, FR-121, FR-122 (R12, R15) |
+| Selector en el menú + unas líneas en `app.js` | Cambio inmediato sin recargar | FR-117, FR-118, FR-119 (R15) |
+| Token `--color-fondo-logo` y fondo de `.logo-previa` | Logos oscuros visibles | FR-129 (R17) |
+| `tests/test_paleta.py` ampliado y `tests/test_tema.py` (nuevo) | Contrastes en los dos temas, paleta completa, ruta y cookie | SC-110 (R16) |
+
+Detalle y alternativas en [research.md](./research.md#ampliación-2026-11-17-modo-oscuro-us7-fr-117-a-fr-130) (R12–R18) y [contracts/tema.md](./contracts/tema.md).
+
 ## Technical Context
 
 Sin cambios respecto a [specs/001-presupuestos-pro/plan.md](../001-presupuestos-pro/plan.md#technical-context): mismo lenguaje, dependencias, almacenamiento, pruebas, plataforma, tipo de proyecto, objetivos de rendimiento y restricciones. **No se añade ninguna dependencia** (ni de Python ni de JavaScript).
@@ -32,6 +49,15 @@ Precisiones de esta iteración:
 - **Punto de corte del menú**: 1024 px (spec, Supuestos).
 - **Esquema**: `PRAGMA user_version = 2` (R11).
 - **Alcance**: ~12 pantallas: las 11 de la 001 (con «Cuentas» renombrada a «Usuarios») más «Crear la cuenta del titular».
+
+Precisiones de la ampliación de modo oscuro (2026-11-17):
+
+- **Dependencias**: ninguna nueva. Solo CSS (`media` en `<link>`, `prefers-color-scheme`, `color-scheme`), una cookie y `fetch` en el `app.js` existente.
+- **Navegadores**: `prefers-color-scheme` y `color-scheme` los soportan todos los navegadores actuales; uno que no informe de preferencia se queda en claro (FR-122).
+- **Esquema**: sin cambios; `user_version` sigue en 2.
+- **CSP**: sin cambios (`script-src 'self'; style-src 'self'`); no se añade ningún script ni estilo en línea.
+- **PDF**: sin cambios; `pdf.estilos_comunes()` sigue leyendo solo `tokens.css`.
+- **Base visual**: tokens, contrastes y etiquetas de [specs/003-rediseno-visual](../003-rediseno-visual/contracts/sistema-visual.md); la 004 (ventana «Exportar…») reutiliza los mismos tokens, así que hereda el modo oscuro.
 
 No queda ningún «NEEDS CLARIFICATION».
 
@@ -49,6 +75,18 @@ No queda ningún «NEEDS CLARIFICATION».
 
 **Re-evaluación tras el diseño (Fase 1)**: ✅ sin cambios. Riesgo asumido y documentado en la spec (Supuestos): mientras no existe titular, `/crear-titular` está abierta (decisión de la sesión de aclaraciones, principio I). No hay violaciones que justificar.
 
+### Ampliación 2026-11-17: modo oscuro
+
+| Principio | Cómo lo cumple el plan | Estado |
+|---|---|---|
+| **I. Simplicidad ante todo** | Una hoja CSS más y un `media` en `<link>`: el navegador hace el trabajo de «Como el sistema» y de los controles nativos. Por dispositivo (cookie), sin columna nueva ni cambio de esquema. Una ruta (`POST /tema`) y unas líneas en `app.js`. Sin dependencias. Descartados `light-dark()`, bloques duplicados y `localStorage` (R13, R14, R12). | ✅ |
+| **II. Idioma y mercado** | Textos nuevos en español de España: «Tema», «Claro», «Oscuro», «Como el sistema», «Aplicar». | ✅ |
+| **III. Cero alcance fantasma** | Solo US7/FR-117–FR-130: sin temas extra, sin PDF oscuro, sin programación horaria, sin selector en pantallas sin sesión, sin guardar el tema en la cuenta (fuera de alcance de la spec). | ✅ |
+| **IV. Verificable sin leer código** | [quickstart.md](./quickstart.md#f-modo-oscuro-us7-ampliación-2026-11-17) sección F cubre los 12 escenarios de US7, los casos límite y SC-108–SC-112 con pasos y resultado visible. Solo F17 (tests de contraste) es técnico; SC-110 también se comprueba con cualquier comprobador de contraste sobre la tabla de [tema.md](./contracts/tema.md#pares-de-contraste-en-oscuro-fr-127). | ✅ |
+| **V. Datos del usuario con respeto** | No se pide ningún dato nuevo. La cookie `tema` solo guarda una de tres palabras, no identifica a nadie y no se guarda en el servidor. Sin secretos. | ✅ |
+
+**Re-evaluación tras el diseño (Fase 1)**: ✅ sin violaciones. Seguridad: `POST /tema` exige sesión y origen propio (D9) y solo redirige a rutas internas (`volver`), para no abrir una redirección a sitios ajenos.
+
 ## Project Structure
 
 ### Documentation (this feature)
@@ -60,8 +98,9 @@ specs/002-mejoras-ui-usuarios/
 ├── data-model.md        # Fase 1: solo cambios sobre el modelo de la 001
 ├── quickstart.md        # Fase 1: guía de comprobación en la app
 ├── contracts/
-│   ├── cambios-rutas-y-pantallas.md   # Rutas nuevas/renombradas, exportación v2, órdenes
-│   └── interfaz.md                    # Menú, controles de formulario, textos
+│   ├── cambios-rutas-y-pantallas.md   # Rutas nuevas/renombradas, exportación v2, órdenes, POST /tema
+│   ├── interfaz.md                    # Menú, controles de formulario, textos
+│   └── tema.md                        # Ampliación: selector, ruta, cookie, paleta oscura y contrastes
 └── tasks.md             # Fase 2 (/speckit-tasks; no lo crea este comando)
 ```
 
@@ -110,7 +149,44 @@ tests/
 └── test_actualizacion.py              # NUEVO: base de datos v1 → v2 conserva datos (SC-106)
 ```
 
+Archivos que toca la **ampliación de modo oscuro** (2026-11-17):
+
+```text
+presupuestos/
+├── rutas/
+│   ├── __init__.py                    # modificado: tema_actual(request) como global de plantillas (R12, R14)
+│   └── sesion.py                      # modificado: POST /tema y cookie «tema», junto a la cookie de sesión (R12, R15)
+├── templates/
+│   └── base.html                      # modificado: <link id="tokens-oscuro" media=…>, meta color-scheme, selector «Tema» en el menú (R14, R15)
+└── static/
+    ├── tokens.css                     # modificado: solo el token nuevo --color-fondo-logo (R13, R17)
+    ├── tokens-oscuro.css              # NUEVO: paleta oscura completa + color-scheme: dark (R13, R16)
+    ├── estilos.css                    # modificado: selector «Tema» en el menú, .logo-previa con fondo (R15, R17)
+    └── app.js                         # modificado: aplicar el tema al momento y guardarlo con fetch; ocultar «Aplicar» (R15)
+tests/
+├── test_paleta.py                     # modificado: pares en los dos temas, paleta oscura completa y solo de color (R16)
+└── test_tema.py                       # NUEVO: POST /tema (cookie, 204/303/422, volver interno, sesión), base.html según cookie, páginas sin sesión en «sistema», PDF sin hoja oscura (FR-120 a FR-126, FR-130)
+```
+
+No cambian: `pdf.py`, `pdf.html`, `db.py`, `schema.sql`, `app.py` (la ruta se registra con el router de `sesion.py`, que ya está incluido) ni ninguna otra plantilla.
+
 **Structure Decision**: se mantiene el único proyecto Python de la 001. Las dos reglas nuevas con lógica (tipos de documento y países permitidos) van en **`dominio/`**, como las reglas fiscales, para probarlas con pytest y que pantalla y servidor no discrepen. El resto son plantillas, CSS y el `app.js` existente.
+
+La ampliación de modo oscuro no añade lógica de dominio (no hay reglas de negocio nuevas): es presentación (CSS, plantilla, `app.js`) más una ruta mínima.
+
+## Fases de la ampliación de modo oscuro
+
+Orden previsto para `/speckit-tasks` (cada fase se puede comprobar con la sección F de [quickstart.md](./quickstart.md#f-modo-oscuro-us7-ampliación-2026-11-17)):
+
+1. **Paleta**: `tokens-oscuro.css` con los valores de [contracts/tema.md](./contracts/tema.md#paleta-oscura), `--color-fondo-logo` en `tokens.css` y `test_paleta.py` ampliado (FR-127, FR-128; F17).
+2. **Pintar el tema desde el servidor**: `tema_actual(request)` y `base.html` con `<link media>` y `meta color-scheme`; páginas sin sesión en `sistema` (FR-122 a FR-126; F4–F7, F14).
+3. **Recordar la elección**: `POST /tema`, cookie, `volver` interno y tests de la ruta (FR-120, FR-121; F13, F15).
+4. **Selector y cambio inmediato**: selector «Tema» en el menú, estilos y `app.js` (FR-117 a FR-119; F1–F3, F11, F16).
+5. **Detalles y repaso visual**: vista previa del logo (FR-129; F12) y repaso en oscuro de todas las pantallas, la ventana «Exportar…» de la 004, los mensajes, las etiquetas de estado y los controles nativos, a 360 y 1280 px (FR-125; F8–F10).
+6. **Cierre**:
+   - Recorrer la sección F completa de `quickstart.md` y la regresión de la sección E (constitución, «Verificación de cada entrega»).
+   - Actualizar `specs/README.md` (estado de la 002 y de la 003).
+   - Actualizar `CLAUDE.md` con las decisiones de diseño y convenciones nuevas de esta feature, una línea por decisión, con referencia a la spec (p. ej. «[002] …»). No incluir entradas por incluir: solo información transversal y relevante para el proyecto que puedan aprovechar futuras features.
 
 ## Complexity Tracking
 

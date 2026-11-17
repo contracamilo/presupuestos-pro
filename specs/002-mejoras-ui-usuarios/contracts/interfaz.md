@@ -18,8 +18,11 @@ Describe lo que el usuario ve y puede hacer; sirve de referencia para las planti
 | | Usuarios | `/usuarios` | Solo titular | `/usuarios*` |
 | | Mi cuenta | `/mi-cuenta` | Todos | `/mi-cuenta*` |
 | | Exportar | `/exportar` | Todos | — (descarga) |
+| | **Tema** *(ampliación 2026-11-17)* | `POST /tema` | Todos | — (selector, no enlace) |
 | — | Salir | `POST /salir` | Todos | — |
 
+- «Exportar» lo retiró después del menú la spec 004 (pasó a un botón «Exportar…» con ventana); se mantiene aquí como registro de la v1.1.
+- El selector «Tema» (Claro / Oscuro / Como el sistema) va al final de «Configuración», antes de «Salir». Comportamiento, ruta, cookie y paleta: [tema.md](./tema.md).
 - No se muestra en `/entrar`, `/crear-titular` ni en páginas de error sin sesión.
 - La entrada resaltada lleva `aria-current="page"` y un estilo visible distinto (no solo color).
 
@@ -83,3 +86,5 @@ Navegador sin calendario: campo de texto que acepta DD/MM/AAAA con los mensajes 
 |---|---|
 | Sin logo | Título «Logo (aparece en tus PDF)», texto «PNG, JPG o SVG, hasta 2 MB», botón «Subir logo» |
 | Con logo | Título, vista previa, «Cambiar logo» y «Quitar logo» (pide confirmación: «¿Quitar el logo? Los presupuestos ya descargados lo conservan.») |
+
+La vista previa se muestra siempre sobre fondo blanco, también en el tema oscuro (FR-129, [tema.md](./tema.md#vista-previa-del-logo-fr-129)).

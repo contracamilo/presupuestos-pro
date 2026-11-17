@@ -1,12 +1,16 @@
-# Feature Specification: PresupuestosPro v1.1 — Navegación, formularios y alta de usuarios
+# Feature Specification: PresupuestosPro v1.1 — Navegación, formularios, alta de usuarios y modo oscuro
 
 **Feature Branch**: `002-mejoras-ui-usuarios`
 
 **Created**: 2026-11-14
 
+**Updated**: 2026-11-17 (ampliación: modo oscuro conmutable — US7, FR-117 a FR-130, SC-108 a SC-112)
+
 **Status**: Draft
 
 **Input**: User description: "quiero iterar sobre un par de cosas en 001-presupuestos-pro debemos tener pestaña o tab de creacion de datos de usuario, los selectores por ejemplo de tipo de documento CIF, deben ser selectores, las fechas deben ser date pickers, si voy a historial deberia tenr un boton de volver o que ver historial se un tab, podriamos tener un menu lateral y un hambrurguer en mobile, tambien en la parte de cliente deberia poder añadir una imagen de logo, deberia poder crear usuarios de manera clara no haciendo comandos de docker"
+
+**Input (ampliación 2026-11-17)**: "se debe trabajar sobre la spec existente 002-mejoras-ui-usuarios modificandola, no creando una nueva, agregando criterios y casos borde y demás documentados en modo-oscuro-dpec.md" — pre-especificación de un modo oscuro conmutable (Claro / Oscuro / Como el sistema).
 
 ## Contexto
 
@@ -17,7 +21,9 @@
   - Las fechas se escriben a mano en formato DD/MM/AAAA, sin calendario.
   - Las cuentas de usuario no tienen un lugar evidente en la app, y la primera cuenta (titular) solo se puede crear ejecutando un comando en el servidor.
   - El autónomo no encuentra con claridad dónde subir su propio logo para que salga en el PDF (ya existe en Perfil desde v1, pero no se ve).
-- **Usuarios afectados**: titular y asistentes (uso diario) y administrador técnico (instalación). Ver roles en la spec 001.
+  - *(Ampliación 2026-11-17)* La app solo se ve en claro: con poca luz la pantalla blanca cansa la vista, y la app ignora que muchos dispositivos ya están en modo oscuro.
+- **Usuarios afectados**: titular y asistentes (uso diario) y administrador técnico (instalación). Ver roles en la spec 001. Los clientes del autónomo no se ven afectados por el modo oscuro: el PDF no cambia.
+- **Relación con la spec 003**: el modo oscuro es una segunda paleta del sistema visual de la spec 003 (colores definidos en un único lugar, contrastes WCAG 2.1 AA, etiquetas de estado). No cambia tipografía, tamaños, separaciones ni maquetación.
 
 ## Clarifications
 
@@ -27,11 +33,15 @@
 - Q: ¿De quién es el logo que se quería poder subir: de cada cliente o del propio autónomo? → A: Solo del autónomo (emisor), que es el que sale en el PDF. No se añade logo a los clientes; se pide que el logo del Perfil se vea y se suba con claridad.
 - Q: ¿La «pestaña de creación de datos de usuario» es la sección «Usuarios» o una pantalla con pestañas para Perfil, Ajustes y Mi cuenta? → A: Cada opción es una entrada propia del menú lateral (incluida «Usuarios» para dar de alta cuentas); no hay pantalla con pestañas. El menú se ordena en dos grupos: «Trabajo» y «Configuración».
 
+### Session 2026-11-17
+
+- Q: ¿La preferencia de tema se recuerda por usuario o por dispositivo? → A: Por dispositivo: cada navegador recuerda su elección, compartida por quien use ese equipo. No se guarda en la cuenta ni cambia los datos almacenados (FR-121).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Navegar con un menú lateral siempre visible (Priority: P1)
 
-Como titular o asistente, quiero un menú lateral con cada sección como entrada propia, ordenadas en «Trabajo» (Presupuestos/Historial, Clientes, Catálogo) y «Configuración» (Perfil, Ajustes, Usuarios, Mi cuenta, Exportar), más «Salir», que me indique en qué sección estoy, y que en el móvil se abra con un botón de menú (hamburguesa), para moverme por la herramienta sin perderme.
+Como titular o asistente, quiero un menú lateral con cada sección como entrada propia, ordenadas en «Trabajo» (Presupuestos/Historial, Clientes, Catálogo) y «Configuración» (Perfil, Ajustes, Usuarios, Mi cuenta y el selector «Tema» de US7; «Exportar» lo retiró la spec 004), más «Salir», que me indique en qué sección estoy, y que en el móvil se abra con un botón de menú (hamburguesa), para moverme por la herramienta sin perderme.
 
 **Why this priority**: afecta a todas las pantallas y resuelve el problema de «no sé cómo volver». Es la base sobre la que se apoyan las demás mejoras.
 
@@ -139,6 +149,31 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 
 ---
 
+### User Story 7 - Elegir entre tema claro, oscuro o el del sistema (Priority: P2)
+
+Como titular o asistente, quiero elegir desde el menú lateral si la app se ve en **Claro**, **Oscuro** o **Como el sistema**, que el cambio sea inmediato sin perder lo que estoy escribiendo y que la app lo recuerde, para trabajar cómodo con cualquier luz; y como autónomo, quiero que el PDF que envío a mis clientes salga siempre igual, en claro, use el tema que use.
+
+**Why this priority**: mejora la comodidad y la accesibilidad de uso diario, pero la herramienta ya funciona sin ello; se apoya en el menú lateral (US1) y en el sistema visual de la spec 003.
+
+**Independent Test**: con un presupuesto abierto a medio editar, elegir «Oscuro» en el menú, comprobar que toda la pantalla cambia al momento y que nada se pierde; recargar, cambiar de sección y volver a entrar otro día y comprobar que sigue en oscuro; descargar el PDF y comprobar que sale en claro.
+
+**Acceptance Scenarios**:
+
+1. **Given** la app en claro, **When** elijo «Oscuro» en el selector «Tema» del menú lateral, **Then** toda la pantalla pasa a oscuro al momento, sin recargar.
+2. **Given** un presupuesto con una línea a medio escribir, **When** cambio de tema, **Then** la línea y lo escrito siguen ahí, los totales no cambian y el guardado automático continúa con normalidad.
+3. **Given** elegí «Oscuro», **When** recargo, voy a Clientes, cierro el navegador y vuelvo a entrar, **Then** la app sigue en oscuro en todos los casos.
+4. **Given** tema «Como el sistema» y el dispositivo en claro, **When** cambio el dispositivo a oscuro con la app abierta, **Then** la app pasa a oscuro sin tocar nada.
+5. **Given** el dispositivo en oscuro, **When** elijo «Claro» en la app, **Then** la app se ve en claro y no vuelve a oscuro al recargar.
+6. **Given** nunca he elegido tema, **When** entro en la app, **Then** el selector muestra «Como el sistema» y la app sigue la preferencia del dispositivo.
+7. **Given** la app en oscuro, **When** descargo el PDF de un presupuesto, **Then** el PDF tiene fondo blanco y es igual al que se descarga con la app en claro.
+8. **Given** la app en oscuro, **When** recorro todas las pantallas, el menú, un error de formulario, el aviso «No se ha podido guardar» y el historial con presupuestos Borrador, Enviado y Caducado, **Then** todo se lee bien, no queda ningún fondo blanco suelto ni texto oscuro sobre fondo oscuro, y las etiquetas de estado se distinguen entre sí.
+9. **Given** la app en oscuro, **When** abro el calendario de fecha de emisión y el selector de tipo de cliente, **Then** se muestran también en oscuro y legibles.
+10. **Given** solo uso teclado y lector de pantalla, **When** llego al selector «Tema» y cambio de opción, **Then** el foco es visible en ambos temas y se anuncia el nombre «Tema», las opciones y la opción elegida.
+11. **Given** tema «Oscuro» guardado, **When** recargo varias veces cualquier pantalla, **Then** en ningún momento aparece un destello del tema claro.
+12. **Given** un logo negro con fondo transparente, **When** abro Perfil en oscuro, **Then** la vista previa del logo se distingue con claridad.
+
+---
+
 ### Edge Cases
 
 - **Pantalla pequeña con menú abierto**: el contenido de detrás no se desplaza mientras el menú está abierto, y no aparece desplazamiento horizontal a partir de 360 px (FR-031 de la spec 001).
@@ -151,13 +186,27 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 - **Copia de seguridad y exportación**: incluyen el tipo de documento de cada cliente.
 - **Restablecer la contraseña del titular** sigue siendo tarea del administrador técnico (FR-039 de la spec 001); esta spec solo elimina el comando para la creación inicial.
 
+**Modo oscuro (US7)**
+
+- **Sin JavaScript o si no carga**: el selector «Tema» sigue funcionando recargando la página, y el tema guardado se aplica igual (FR-120).
+- **Navegador sin preferencia de sistema**: «Como el sistema» equivale a «Claro».
+- **Pantallas sin sesión** (inicio de sesión y «Crear la cuenta del titular»): siguen la preferencia del sistema y no muestran el selector, igual que no muestran el menú (US1 AS5).
+- **Logo oscuro o con fondo transparente**: su vista previa se muestra siempre sobre una superficie clara para que no desaparezca (FR-129). El PDF no cambia.
+- **Titular y asistente en el mismo equipo y navegador**: comparten el tema elegido en ese equipo (FR-121).
+- **Mismo usuario en dos dispositivos**: cada dispositivo recuerda su propia elección; cambiarla en uno no afecta al otro.
+- **Navegador que borra sus datos o ventana privada**: se pierde la elección y vuelve a «Como el sistema» (FR-122).
+- **Cambiar de tema durante un guardado automático**: el guardado termina con normalidad; el tema no interfiere con los datos.
+- **Cerrar sesión**: la pantalla de inicio de sesión sigue la preferencia del sistema (FR-124); al volver a entrar se aplica de nuevo la elección guardada en ese dispositivo.
+- **Modo de alto contraste forzado por el sistema** (p. ej., Windows): la app no lo impide; no se diseña una paleta específica para él.
+- **Imprimir una pantalla desde el navegador**: fuera de alcance; el documento imprimible es el PDF.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
 **Navegación**
 
-- **FR-101**: Con sesión iniciada, todas las pantallas DEBEN mostrar un menú lateral con cada sección como entrada propia, ordenadas en dos grupos con título: **Trabajo** (Presupuestos —el historial—, Clientes, Catálogo) y **Configuración** (Perfil, Ajustes, Usuarios —solo titular—, Mi cuenta, Exportar), y al final «Salir». Sustituye al menú desplegable de la cabecera de v1. No hay pantallas con pestañas.
+- **FR-101**: Con sesión iniciada, todas las pantallas DEBEN mostrar un menú lateral con cada sección como entrada propia, ordenadas en dos grupos con título: **Trabajo** (Presupuestos —el historial—, Clientes, Catálogo) y **Configuración** (Perfil, Ajustes, Usuarios —solo titular—, Mi cuenta, Tema), y al final «Salir». Sustituye al menú desplegable de la cabecera de v1. No hay pantallas con pestañas. *(La entrada «Exportar» que tenía «Configuración» la retiró la spec 004, que la sustituyó por el botón «Exportar…» de la lista de presupuestos; el selector «Tema» lo añade FR-117.)*
 - **FR-102**: El menú DEBE resaltar la sección en la que está el usuario; al estar dentro de un presupuesto, se resalta «Presupuestos».
 - **FR-103**: En pantallas de menos de 1024 px de ancho, el menú DEBE estar oculto y abrirse con un botón de menú (hamburguesa) en la cabecera. DEBE cerrarse al elegir una sección, al pulsar fuera de él o al pulsar de nuevo el botón.
 - **FR-104**: El menú y su botón DEBEN poder usarse solo con teclado y estar identificados para lectores de pantalla («Abrir menú» / «Cerrar menú»).
@@ -187,12 +236,30 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 - **FR-116**: El Perfil DEBE mostrar un apartado «Logo (aparece en tus PDF)» con la indicación de formatos y tamaño permitidos, la vista previa del logo actual si existe y los botones «Subir logo» (sin logo) o «Cambiar logo» y «Quitar logo» (con logo). «Quitar logo» pide confirmación. Las reglas de formato, tamaño y congelación en la primera descarga de la spec 001 (FR-002, FR-018) no cambian.
 - Los clientes NO tienen logo (decisión de la sesión de aclaraciones).
 
+**Tema (modo oscuro)**
+
+- **FR-117**: Con sesión iniciada, el menú lateral DEBE incluir un selector «Tema» con tres opciones: «Claro», «Oscuro» y «Como el sistema», como última entrada del grupo «Configuración» (después de «Mi cuenta», con las entradas vigentes de FR-101) e inmediatamente antes de «Salir». En pantallas de menos de 1024 px está dentro del menú desplegable (FR-103).
+- **FR-118**: Al elegir una opción, el tema DEBE aplicarse a la pantalla actual de inmediato, sin recargar, sin perder lo escrito en formularios ni las líneas de un presupuesto en edición y sin interrumpir el guardado automático.
+- **FR-119**: El selector DEBE poder usarse solo con teclado y estar identificado para lectores de pantalla: nombre «Tema», sus tres opciones y cuál está activa.
+- **FR-120**: El selector DEBE funcionar aunque el JavaScript del navegador no se ejecute; en ese caso basta con que el cambio se vea tras recargar la página.
+- **FR-121**: La elección DEBE recordarse al recargar, al cambiar de sección y al cerrar y volver a abrir el navegador. Se recuerda **por dispositivo**: cada navegador guarda su elección, compartida por quien use ese equipo; no se guarda en la cuenta del usuario ni cambia los datos almacenados de la herramienta.
+- **FR-122**: Sin elección previa, el tema DEBE ser «Como el sistema». Si el navegador no informa de ninguna preferencia, «Como el sistema» equivale a «Claro».
+- **FR-123**: Con «Como el sistema», la app DEBE seguir la preferencia del dispositivo y cambiar sola si esta cambia mientras la app está abierta.
+- **FR-124**: La elección explícita del usuario («Claro» u «Oscuro») DEBE prevalecer sobre la preferencia del sistema. Las pantallas sin sesión (inicio de sesión y «Crear la cuenta del titular») siguen la preferencia del sistema y no muestran el selector.
+- **FR-125**: El tema oscuro DEBE cubrir todas las pantallas (las de sesión iniciada y las de sin sesión), el menú lateral y su fondo de superposición, los avisos (p. ej., «No se ha podido guardar»), los diálogos de confirmación, la ventana «Exportar…» de la spec 004 y su aviso «No hay presupuestos que exportar», los mensajes de error, las cinco etiquetas de estado de la spec 003 (las tres mostrables y las dos solo diseñadas) y los controles propios del navegador (calendarios, selectores desplegables, casillas y barras de desplazamiento).
+- **FR-126**: Cada pantalla DEBE mostrarse desde el primer momento con el tema que corresponde, sin destello del tema contrario al cargar o recargar.
+- **FR-127**: Ambos temas DEBEN cumplir los contrastes de FR-212 de la spec 003 (4,5:1 texto normal; 3:1 texto grande, bordes de campos, iconos con significado e indicador de foco) e incluir el indicador de foco de FR-213. Cada color conserva su significado en los dos temas (marca = azul, éxito = verde, aviso = ámbar, error = rojo) y los estados siguen sin distinguirse solo por color (FR-210 de la spec 003).
+- **FR-128**: Los colores de ambos temas DEBEN definirse en el sistema visual de la spec 003, que sigue siendo el único lugar con colores (FR-202): la paleta clara y su variante oscura, que usa **los mismos nombres de color** con otros valores y no define nada más (ni tamaños, ni tipografía, ni separaciones). La variante oscura puede guardarse aparte de la clara; ninguna pantalla ni ningún otro sitio define colores propios. Cambiar un color en una de las dos paletas lo cambia en todas las pantallas con ese tema.
+- **FR-129**: La vista previa del logo del emisor en Perfil (FR-116) DEBE mostrarse sobre una superficie clara en ambos temas, para que logos oscuros o con fondo transparente se distingan.
+- **FR-130**: El PDF DEBE generarse siempre con la paleta clara de la spec 003, sea cual sea el tema de quien lo descarga; su contenido y aspecto no cambian.
+
 
 ### Key Entities
 
 - **Cliente** (cambia): se añade *tipo de documento* (NIF, CIF, NIE, NIF-IVA UE, Otro documento extranjero o sin indicar). El campo «NIF/NIE o NIF-IVA» de v1 pasa a ser el *número de documento*; *país* pasa a elegirse de una lista.
 - **Usuario** (sin cambios en sus datos): cambia solo cómo se crea la cuenta del titular (desde el navegador en la primera puesta en marcha).
 - **Línea de presupuesto / Servicio** (sin cambios en sus datos): la unidad pasa a elegirse con selector.
+- **Preferencia de tema** (nueva): una de «Claro», «Oscuro» o «Como el sistema» (por defecto). Se guarda en el dispositivo (navegador), no en la cuenta (FR-121). No forma parte de presupuestos, clientes, catálogo, perfil ni ajustes fiscales; no se guarda en el servidor, por lo que no aparece en las copias de seguridad ni en la exportación (.zip de la spec 004).
 
 ## Success Criteria *(mandatory)*
 
@@ -205,6 +272,11 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 - **SC-105**: En un móvil de 360 px, el menú se abre y se cierra con un toque y ninguna pantalla presenta desplazamiento horizontal.
 - **SC-106**: Tras la actualización, el 100 % de los clientes, presupuestos e importes creados con v1 siguen presentes y con los mismos importes.
 - **SC-107**: Cada escenario de aceptación de esta spec puede comprobarse en la app siguiendo pasos escritos, sin leer código, incluida la creación del titular.
+- **SC-108**: Con el menú abierto, cambiar de tema lleva un solo toque o pulsación y menos de 5 segundos, sin pérdida de datos en el 100 % de los intentos.
+- **SC-109**: En un recorrido de todas las pantallas en oscuro a 360 px y a 1280 px, el 100 % de los textos, campos, botones, avisos y etiquetas de estado se leen con claridad y no queda ninguna zona con los colores del tema claro.
+- **SC-110**: El 100 % de las combinaciones de texto/fondo y de controles cumplen los contrastes de FR-212 de la spec 003 en ambos temas, medidos con cualquier comprobador de contraste.
+- **SC-111**: El 100 % de los PDF descargados con la app en oscuro son iguales a los descargados en claro.
+- **SC-112**: El tema elegido se mantiene en el 100 % de las recargas, cambios de sección y reaperturas del navegador, sin destello del tema contrario.
 
 ## Assumptions
 
@@ -215,6 +287,9 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 - La lista de países es la estándar de países en español; la lista de la UE es la vigente a la fecha de la entrega.
 - Las operaciones de copias de seguridad, restauración y restablecimiento de la contraseña del titular siguen siendo tareas del administrador técnico, con los pasos escritos de la spec 001.
 - La guía de administración se actualizará para quitar el comando de creación del titular y para indicar que el titular se cree nada más arrancar el servidor.
+- **Modo oscuro**: no cambia tipografía, tamaños, separaciones ni maquetación de la spec 003. El color de marca puede aclararse en el tema oscuro (mismo tono, más luminoso) para cumplir FR-127; el PDF conserva el color de marca actual.
+- **Modo oscuro**: elegir tema no altera presupuestos, clientes, catálogo, perfil ni ajustes fiscales.
+- **Modo oscuro**: se ofrecen tres opciones en lugar de un interruptor claro↔oscuro, para poder volver a seguir al sistema tras haber elegido un tema.
 - **Riesgo aceptado (FR-110)**: entre el arranque del servidor y la creación del titular, cualquiera que conozca la dirección podría crear el titular. Se acepta por simplicidad (principio I). Si ocurre, el administrador técnico lo detecta porque no puede crear el titular y reinstala con los datos vacíos (aún no hay datos que perder).
 
 ### Fuera de alcance
@@ -226,3 +301,8 @@ Como titular, quiero ver con claridad en mi Perfil dónde subir, cambiar o quita
 - Validación online del número de documento (VIES u otros).
 - Selector de hora o rangos de fechas en el historial.
 - Logo de los clientes (ni en la herramienta ni en el PDF).
+- Guardar el tema en la cuenta del usuario o sincronizarlo entre dispositivos.
+- Temas adicionales al claro y el oscuro (alto contraste propio, sepia, colores personalizables o color de marca elegido por el usuario).
+- PDF en oscuro o elegir el tema del PDF.
+- Programar el cambio de tema por horario dentro de la app (para eso está «Como el sistema»).
+- Selector de tema en las pantallas sin sesión.
