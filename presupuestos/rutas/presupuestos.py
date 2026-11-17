@@ -312,6 +312,29 @@ def borrar_linea(request: Request, id_: int, linea_id: int, conn: sqlite3.Connec
 # ---------------------------------------------------------------- PDF (FR-018, FR-021 a FR-025)
 
 
+def html_pdf(conn: sqlite3.Connection, datos: dict) -> str:
+    """HTML del PDF de un presupuesto ya cargado; lo usan la descarga individual y la exportación (FR-304)."""
+    from presupuestos.pdf import estilos_comunes
+
+    emisor = datos["perfil_efectivo"]
+    logo_uri = None
+    if emisor.get("logo_id"):
+        logo = conn.execute("SELECT tipo, datos FROM logos WHERE id = ?", (emisor["logo_id"],)).fetchone()
+        if logo:
+            logo_uri = f"data:{logo['tipo']};base64,{base64.b64encode(logo['datos']).decode()}"
+
+    calc = datos["calculo"]
+    return plantillas.get_template("pdf.html").render(
+        estilos_comunes=estilos_comunes(),
+        p=datos["presupuesto"],
+        emisor=emisor,
+        logo_uri=logo_uri,
+        cliente=datos["cliente"],
+        lineas=list(zip(datos["lineas"], calc.importes_linea)),
+        calc=calc,
+    )
+
+
 @router.get("/presupuestos/{id_}/pdf")
 def descargar_pdf(request: Request, id_: int, conn: sqlite3.Connection = Depends(db.get_db)):
     datos = db.cargar_presupuesto(conn, id_)
@@ -336,25 +359,9 @@ def descargar_pdf(request: Request, id_: int, conn: sqlite3.Connection = Depends
             )
         datos = db.cargar_presupuesto(conn, id_)
 
-    emisor = datos["perfil_efectivo"]
-    logo_uri = None
-    if emisor.get("logo_id"):
-        logo = conn.execute("SELECT tipo, datos FROM logos WHERE id = ?", (emisor["logo_id"],)).fetchone()
-        if logo:
-            logo_uri = f"data:{logo['tipo']};base64,{base64.b64encode(logo['datos']).decode()}"
+    from presupuestos.pdf import generar_pdf  # WeasyPrint solo se carga al generar un PDF
 
-    calc = datos["calculo"]
-    from presupuestos.pdf import estilos_comunes, generar_pdf  # WeasyPrint solo se carga al generar un PDF
-
-    html = plantillas.get_template("pdf.html").render(
-        estilos_comunes=estilos_comunes(),
-        p=datos["presupuesto"],
-        emisor=emisor,
-        logo_uri=logo_uri,
-        cliente=datos["cliente"],
-        lineas=list(zip(datos["lineas"], calc.importes_linea)),
-        calc=calc,
-    )
+    html = html_pdf(conn, datos)
     archivo = nombre_pdf(p["numero"], datos["cliente"]["nombre"])
     return Response(
         generar_pdf(html),

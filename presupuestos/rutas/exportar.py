@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
 from presupuestos import db
-from presupuestos.dominio import fechas
+from presupuestos.dominio import estado, fechas
+from presupuestos.dominio.validacion import requisitos_descarga
 from presupuestos.rutas import usuario_actual
 
 router = APIRouter(dependencies=[Depends(usuario_actual)])
@@ -26,35 +27,49 @@ def _filas(conn: sqlite3.Connection, sql: str, parametros: tuple = ()) -> list[d
     return resultado
 
 
-def datos_exportacion(conn: sqlite3.Connection) -> dict:
+def datos_exportacion(conn: sqlite3.Connection, ids: list[int] | None = None) -> dict:
+    """Archivo de datos: completo (`ids=None`) o solo de los presupuestos de `ids` (contracts/archivo-exportacion.md)."""
+    parcial = ids is not None
+    marcas = ",".join("?" * len(ids)) if parcial else ""
     perfil = _filas(conn, "SELECT nombre, nif, direccion, email, telefono, logo_id FROM perfil WHERE id = 1")[0]
     ajustes = _filas(conn, "SELECT tipo_iva, retencion_activa, tipo_retencion, dias_validez, mencion_canarias "
                            "FROM ajustes WHERE id = 1")[0]
-    logos = [
-        {"id": f["id"], "tipo": f["tipo"], "datos_base64": base64.b64encode(f["datos"]).decode()}
-        for f in conn.execute("SELECT id, tipo, datos FROM logos ORDER BY id")
-    ]
-    servicios = _filas(conn, "SELECT id, nombre, descripcion, unidad, precio_cent, archivado FROM servicios ORDER BY id")
-    clientes = _filas(conn, "SELECT id, nombre, nif, direccion, pais, email, categoria, territorio, "
-                            "tipo_documento, nif_iva_verificado, archivado, anonimizado FROM clientes ORDER BY id")
-    for c in clientes:
-        c["anonimizado"] = bool(c["anonimizado"])
+    servicios = [] if parcial else _filas(
+        conn, "SELECT id, nombre, descripcion, unidad, precio_cent, archivado FROM servicios ORDER BY id")
     presupuestos = _filas(conn, "SELECT id, numero, fecha_creacion, fecha_emision, fecha_validez, "
                                 "validez_editada_a_mano, tipo_iva, cliente_id, notas, emisor_congelado "
-                                "FROM presupuestos ORDER BY id")
+                                "FROM presupuestos" + (f" WHERE id IN ({marcas})" if parcial else "") + " ORDER BY id",
+                          tuple(ids) if parcial else ())
+    cliente_ids = {p["cliente_id"] for p in presupuestos if p["cliente_id"] is not None}
+    clientes = _filas(conn, "SELECT id, nombre, nif, direccion, pais, email, categoria, territorio, "
+                            "tipo_documento, nif_iva_verificado, archivado, anonimizado FROM clientes ORDER BY id")
+    if parcial:
+        clientes = [c for c in clientes if c["id"] in cliente_ids]
+    for c in clientes:
+        c["anonimizado"] = bool(c["anonimizado"])
+    logo_ids = None
     for p in presupuestos:
         if p["emisor_congelado"]:
             p["emisor_congelado"] = json.loads(p["emisor_congelado"])
         p["lineas"] = _filas(conn, "SELECT posicion, descripcion, unidad, cantidad_cent, precio_cent "
                                    "FROM lineas WHERE presupuesto_id = ? ORDER BY posicion", (p["id"],))
-    contadores = _filas(conn, "SELECT anio, ultimo FROM contadores ORDER BY anio")
+    if parcial:
+        logo_ids = {p["emisor_congelado"]["logo_id"] for p in presupuestos
+                    if p["emisor_congelado"] and p["emisor_congelado"].get("logo_id")}
+    logos = [
+        {"id": f["id"], "tipo": f["tipo"], "datos_base64": base64.b64encode(f["datos"]).decode()}
+        for f in conn.execute("SELECT id, tipo, datos FROM logos ORDER BY id")
+        if logo_ids is None or f["id"] in logo_ids
+    ]
+    contadores = [] if parcial else _filas(conn, "SELECT anio, ultimo FROM contadores ORDER BY anio")
     return {
         "formato": "presupuestospro",
         "version": 2,
+        "alcance": "seleccion" if parcial else "completo",
         "exportado_en": db.ahora_utc().replace("+00:00", "Z"),
         "datos": {
-            "perfil": perfil,
-            "ajustes": ajustes,
+            "perfil": None if parcial else perfil,
+            "ajustes": None if parcial else ajustes,
             "logos": logos,
             "servicios": servicios,
             "clientes": clientes,
@@ -62,6 +77,31 @@ def datos_exportacion(conn: sqlite3.Connection) -> dict:
             "contadores": contadores,
         },
     }
+
+
+def presupuestos_exportables(conn: sqlite3.Connection) -> list[dict]:
+    """Presupuestos ya descargados cuyo PDF la app puede generar hoy, en el orden del historial (research E6)."""
+    hoy = fechas.hoy()
+    resultado = []
+    ids = [f["id"] for f in conn.execute(
+        "SELECT id FROM presupuestos WHERE emisor_congelado IS NOT NULL ORDER BY fecha_emision DESC, numero DESC")]
+    for id_ in ids:
+        datos = db.cargar_presupuesto(conn, id_)
+        if requisitos_descarga(datos["perfil_efectivo"], datos["cliente"], datos["lineas"]):
+            continue
+        p = datos["presupuesto"]
+        resultado.append({
+            "id": id_, "numero": p["numero"], "cliente_nombre": datos["cliente"]["nombre"],
+            "estado": estado.estado(p["emisor_congelado"], p["fecha_validez"], hoy),
+            "fecha_emision": p["fecha_emision"],
+        })
+    return resultado
+
+
+def resumen_exportacion(conn: sqlite3.Connection) -> dict:
+    total = conn.execute("SELECT COUNT(*) FROM presupuestos").fetchone()[0]
+    exportables = len(presupuestos_exportables(conn))
+    return {"total": total, "exportables": exportables, "solo_datos": total - exportables}
 
 
 @router.get("/exportar")

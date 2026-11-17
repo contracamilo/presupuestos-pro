@@ -1,7 +1,7 @@
 import pytest
 
 from presupuestos.dominio import fechas, formato
-from presupuestos.dominio.nombre_archivo import nombre_pdf
+from presupuestos.dominio.nombre_archivo import limpiar_nombre, nombre_pdf, nombre_pdf_zip
 
 
 def test_euros():
@@ -60,3 +60,17 @@ def test_leer_fecha_invalida(texto):
     with pytest.raises(ValueError) as esperado:
         fechas.leer_dmy("texto no válido")
     assert str(error.value) == str(esperado.value)
+
+
+def test_nombre_pdf_zip():
+    assert nombre_pdf_zip("PRE-2026-001", "Diseño/Web S.L.") == "PRE-2026-001 - Diseño Web S.L.pdf"
+    assert nombre_pdf_zip("PRE-2026-001", "Estudio García") == "PRE-2026-001 - Estudio García.pdf"
+    assert nombre_pdf_zip("PRE-2026-001", "A:B*C?") == "PRE-2026-001 - A B C.pdf"
+    assert nombre_pdf_zip("PRE-2026-001", "") == "PRE-2026-001 - Sin cliente.pdf"
+    assert nombre_pdf_zip("PRE-2026-001", "///") == "PRE-2026-001 - Sin cliente.pdf"
+    assert len(limpiar_nombre("x" * 150)) <= 80
+    assert limpiar_nombre("a" * 79 + " " + "b" * 20) == "a" * 79
+
+
+def test_nombre_pdf_individual_no_cambia():
+    assert nombre_pdf("PRE-2026-001", "Estudio García") == "PRE-2026-001_Estudio-Garcia.pdf"
