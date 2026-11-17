@@ -60,6 +60,161 @@
     if (e.key === "Escape" && menuAbierto()) cerrarMenu(true);
   });
 
+  // ------------------------------------------------------------ ventana «Exportar» (spec 004, E1, E2)
+  // <dialog> nativo: showModal() ya atrapa el foco, cierra con Esc y devuelve el foco al botón.
+  // El envío usa fetch para poder mostrar los errores sin salir de la página.
+
+  function ventanaExportar() { return document.getElementById("ventana-exportar"); }
+
+  document.addEventListener("click", function (e) {
+    var ventana = ventanaExportar();
+    if (!ventana || !e.target.closest) return;
+    if (e.target.closest("#abrir-exportar")) {
+      ventana.showModal();
+    } else if (preparando) {
+      return; // no se cierra mientras se prepara la copia
+    } else if (e.target === ventana) {
+      ventana.close(); // clic sobre el fondo, no sobre el contenido
+    } else if (e.target.closest("[data-cerrar-exportar]")) {
+      ventana.close();
+    }
+  });
+
+  function nombreDeArchivo(respuesta) {
+    var cabecera = respuesta.headers.get("Content-Disposition") || "";
+    var m = /filename="([^"]+)"/.exec(cabecera);
+    return m ? m[1] : "copia.zip";
+  }
+
+  function mostrarErrorExportar(texto) {
+    var error = document.getElementById("exportar-error");
+    if (!error) return;
+    error.textContent = texto;
+    error.hidden = false;
+  }
+
+  // Estado de espera (US3): mientras se prepara la copia no se puede enviar otra ni cerrar la ventana.
+  var preparando = false;
+  var MENSAJE_FALLO = "No se ha podido preparar la copia. Inténtalo de nuevo.";
+
+  function controlesExportar() {
+    return document.querySelectorAll("#form-exportar input, #form-exportar button");
+  }
+
+  function ponerEsperaExportar(form, activa) {
+    preparando = activa;
+    if (activa) {
+      form.setAttribute("aria-busy", "true");
+      Array.prototype.forEach.call(controlesExportar(), function (c) {
+        c.setAttribute("data-estaba-desactivado", c.disabled ? "1" : "");
+        c.disabled = true;
+      });
+      document.getElementById("exportar-descargar").textContent = "Preparando la copia…";
+    } else {
+      form.removeAttribute("aria-busy");
+      Array.prototype.forEach.call(controlesExportar(), function (c) {
+        c.disabled = c.getAttribute("data-estaba-desactivado") === "1";
+        c.removeAttribute("data-estaba-desactivado");
+      });
+      actualizarExportar(); // vuelve a calcular el texto del botón y las casillas
+    }
+  }
+
+  document.addEventListener("cancel", function (e) {
+    if (preparando && e.target && e.target.id === "ventana-exportar") e.preventDefault(); // Esc
+  }, true);
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || form.id !== "form-exportar") return;
+    e.preventDefault();
+    if (preparando) return;
+    var error = document.getElementById("exportar-error");
+    if (error) error.hidden = true;
+    var datos = new FormData(form); // antes de desactivar los controles
+    ponerEsperaExportar(form, true);
+    fetch(form.action, { method: "POST", body: datos })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.json().then(function (d) { throw new Error(d.error || MENSAJE_FALLO); },
+                               function () { throw new Error(MENSAJE_FALLO); });
+        }
+        return r.blob().then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var enlace = document.createElement("a");
+          enlace.href = url;
+          enlace.download = nombreDeArchivo(r);
+          document.body.appendChild(enlace);
+          enlace.click();
+          document.body.removeChild(enlace);
+          URL.revokeObjectURL(url);
+          ponerEsperaExportar(form, false);
+          ventanaExportar().close();
+        });
+      })
+      .catch(function (err) {
+        ponerEsperaExportar(form, false);
+        mostrarErrorExportar(err && err.message ? err.message : MENSAJE_FALLO);
+      });
+  });
+
+  // Selección de presupuestos (US1b): las casillas solo se envían con «Seleccionar» (si no, van desactivadas).
+  function casillasIds() {
+    return document.querySelectorAll("#form-exportar input[name=ids]");
+  }
+
+  function modoExportar() {
+    var marcado = document.querySelector("#form-exportar input[name=modo]:checked");
+    return marcado ? marcado.value : "todo";
+  }
+
+  function actualizarExportar() {
+    var form = document.getElementById("form-exportar");
+    if (!form) return;
+    var seleccion = modoExportar() === "seleccion";
+    var casillas = casillasIds();
+    var marcadas = 0;
+    Array.prototype.forEach.call(casillas, function (c) {
+      c.disabled = !seleccion;
+      if (c.checked) marcadas += 1;
+    });
+    var contenedor = document.getElementById("seleccion");
+    var ayuda = document.getElementById("ayuda-marcar");
+    if (contenedor) contenedor.hidden = !seleccion;
+    var recuento = document.getElementById("recuento-marcados");
+    if (recuento) recuento.textContent = marcadas + (marcadas === 1 ? " marcado" : " marcados");
+    var todos = document.getElementById("marcar-todos");
+    if (todos) todos.checked = casillas.length > 0 && marcadas === casillas.length;
+    var vacio = seleccion && marcadas === 0;
+    if (ayuda) ayuda.hidden = !vacio;
+    var boton = document.getElementById("exportar-descargar");
+    if (boton) {
+      boton.disabled = vacio;
+      var archivos = seleccion ? marcadas : parseInt(form.getAttribute("data-exportables"), 10);
+      boton.textContent = "Descargar .zip (" + archivos + (archivos === 1 ? " archivo)" : " archivos)");
+    }
+  }
+
+  function restablecerExportar() {
+    var form = document.getElementById("form-exportar");
+    if (!form) return;
+    form.reset();
+    var error = document.getElementById("exportar-error");
+    if (error) error.hidden = true;
+    actualizarExportar();
+  }
+
+  document.addEventListener("change", function (e) {
+    if (!e.target.closest || !e.target.closest("#form-exportar")) return;
+    if (e.target.id === "marcar-todos") {
+      Array.prototype.forEach.call(casillasIds(), function (c) { c.checked = e.target.checked; });
+    }
+    actualizarExportar();
+  });
+  document.addEventListener("close", function (e) {
+    if (e.target && e.target.id === "ventana-exportar") restablecerExportar();
+  }, true);
+
   // ------------------------------------------------------------ no salir con guardados pendientes (R3)
   // En la pantalla de presupuesto, «Volver al historial» y los enlaces del menú esperan a que terminen
   // los guardados en curso. Si alguno falla (sin conexión, error del servidor o dato no válido), no se sale.

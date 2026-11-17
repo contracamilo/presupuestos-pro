@@ -36,7 +36,7 @@ The project was built with **Spec-Driven Development** using [Spec Kit](https://
 - Strict Content Security Policy (no inline scripts or styles), same-origin checks on every write, `no-store` caching for authenticated pages.
 
 **Operations**
-- Full data export as JSON; hot, integrity-checked SQLite backups from the command line.
+- «Export…» button on the history page: one `.zip` with the PDF of every downloaded quote (PDFs only, no data file), for everything or only a selection; hot, integrity-checked SQLite backups from the command line.
 - Automatic, non-destructive database upgrade on start-up.
 
 **Accessibility**
@@ -137,6 +137,7 @@ Each feature went through the Spec Kit workflow — `specify → clarify → pla
 | [001 — PresupuestosPro v1](specs/001-presupuestos-pro/spec.md) | Quotes, clients, catalogue, tax rules, PDF, accounts, export and backups |
 | [002 — Navigation, forms and users](specs/002-mejoras-ui-usuarios/spec.md) | Side menu, back to history, user management, owner sign-up in the browser, selectors, date pickers, logo |
 | [003 — Visual redesign and accessibility](specs/003-rediseno-visual/spec.md) | Design tokens, bundled typography, status badges, PDF redesign, WCAG 2.1 AA |
+| [004 — Export as .zip](specs/004-exportar-zip/spec.md) | Export dialog (all / selection), one `.zip` with the PDFs only, read-only |
 
 Each spec folder contains the plan, research decisions, data model, contracts, a step-by-step verification guide (`quickstart.md`) and the task list. Ideas that are out of scope are tracked in [`specs/propuestas.md`](specs/propuestas.md) until they make it into a spec.
 

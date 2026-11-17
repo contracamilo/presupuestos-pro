@@ -1,0 +1,52 @@
+{% from "fragmentos/_estado.html" import etiqueta_estado %}
+{# Ventana «Exportar» del historial (spec 004, contracts/rutas-http.md). Sin JS ni estilos en línea (CSP). #}
+<dialog id="ventana-exportar" aria-labelledby="exportar-titulo">
+  <h2 id="exportar-titulo">Exportar</h2>
+  {% if resumen.exportables == 0 %}
+  <p>No hay presupuestos que exportar</p>
+  <p class="suave">Solo se exportan los presupuestos que ya has descargado en PDF.</p>
+  <form method="dialog" class="acciones">
+    <button type="submit" class="boton secundario">Cerrar</button>
+  </form>
+  {% else %}
+  <form id="form-exportar" method="post" action="/exportar" data-exportables="{{ resumen.exportables }}">
+    <fieldset>
+      <legend>Qué exportar</legend>
+      <label class="casilla" for="modo-todo">
+        <input type="radio" name="modo" value="todo" id="modo-todo" checked>
+        Todo
+      </label>
+      <div id="recuento-todo" class="suave" aria-live="polite">
+        <p>{{ "Se incluirá 1 PDF." if resumen.exportables == 1 else "Se incluirán " ~ resumen.exportables ~ " PDF." }}
+        {% if resumen.sin_pdf == 1 %}El presupuesto sin PDF no se incluirá.
+        {% elif resumen.sin_pdf > 1 %}Los {{ resumen.sin_pdf }} presupuestos sin PDF no se incluirán.{% endif %}</p>
+      </div>
+      <label class="casilla" for="modo-seleccion">
+        <input type="radio" name="modo" value="seleccion" id="modo-seleccion">
+        Seleccionar qué exportar
+      </label>
+    </fieldset>
+    <fieldset id="seleccion" hidden>
+      <legend>Presupuestos que se exportarán</legend>
+      <label class="casilla" for="marcar-todos"><input type="checkbox" id="marcar-todos"> Marcar todos</label>
+      <p id="recuento-marcados" aria-live="polite">0 marcados</p>
+      <ul class="lista">
+        {% for p in exportables %}
+        <li>
+          <label class="casilla">
+            <input type="checkbox" name="ids" value="{{ p.id }}" disabled>
+            <span><strong>{{ p.numero }}</strong> {{ etiqueta_estado(p.estado) }} · {{ p.cliente_nombre }}</span>
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <p id="ayuda-marcar" class="suave" hidden>Marca al menos un presupuesto.</p>
+    <p id="exportar-error" class="error" role="alert" hidden></p>
+    <div class="acciones">
+      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip ({{ resumen.exportables }} {{ "archivo" if resumen.exportables == 1 else "archivos" }})</button>
+      <button type="button" class="boton secundario" id="exportar-cancelar" data-cerrar-exportar>Cancelar</button>
+    </div>
+  </form>
+  {% endif %}
+</dialog>

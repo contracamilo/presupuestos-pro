@@ -80,4 +80,4 @@ La aplicación genera páginas HTML en el servidor. Las rutas marcadas **(fragme
 
 | Método y ruta | Qué hace |
 |---|---|
-| `GET /exportar` | Descarga el archivo de [archivo-exportacion.md](./archivo-exportacion.md) |
+| `GET /exportar` | Descarga el archivo de [archivo-exportacion.md](./archivo-exportacion.md). **Sustituido por la spec 004**: ahora `POST /exportar` devuelve un `.zip` ([rutas-http.md de la 004](../../004-exportar-zip/contracts/rutas-http.md)) |
