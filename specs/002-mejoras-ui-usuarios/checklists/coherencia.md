@@ -10,34 +10,34 @@
 
 ## Conflictos con la spec 003 (sistema visual)
 
-- [ ] CHK001 - ¿Se ha resuelto que la spec 003 excluya expresamente el modo oscuro («Sin modo oscuro» en Supuestos y «Modo oscuro, temas…» en Fuera de alcance), por ejemplo con una nota de que lo amplía la 002? Hoy las dos specs vigentes se contradicen. [Conflict, Spec 003 §Assumptions, §Fuera de alcance; Spec 002 §FR-117]
+- [x] CHK001 - ¿Se ha resuelto que la spec 003 excluya expresamente el modo oscuro («Sin modo oscuro» en Supuestos y «Modo oscuro, temas…» en Fuera de alcance), por ejemplo con una nota de que lo amplía la 002? Hoy las dos specs vigentes se contradicen. [Conflict, Spec 003 §Assumptions, §Fuera de alcance; Spec 002 §FR-117]
   - *Cambio 2026-11-17*: enmienda en la cabecera de la 003; su supuesto «Modo oscuro» y la línea de Fuera de alcance quedan marcados como enmendados por la 002 (US7).
-- [ ] CHK002 - ¿Está actualizado el caso límite de la 003 «Navegador con modo oscuro del sistema: la app se sigue viendo con su paleta clara», que choca con FR-122/FR-123 de la 002 («Como el sistema» por defecto)? [Conflict, Spec 003 §Edge Cases; Spec 002 §FR-122]
+- [x] CHK002 - ¿Está actualizado el caso límite de la 003 «Navegador con modo oscuro del sistema: la app se sigue viendo con su paleta clara», que choca con FR-122/FR-123 de la 002 («Como el sistema» por defecto)? [Conflict, Spec 003 §Edge Cases; Spec 002 §FR-122]
   - *Cambio 2026-11-17*: caso límite de la 003 reescrito: remite a FR-122 a FR-124 de la 002 («Como el sistema» por defecto; «Claro» mantiene la paleta clara).
-- [ ] CHK003 - ¿Son coherentes «definida en un único lugar» (FR-202 de la 003, FR-128 de la 002) y la decisión del plan de poner la paleta oscura en un archivo aparte (`tokens-oscuro.css`, R13)? ¿Está definido qué cuenta como «un único lugar»? [Conflict, Spec 003 §FR-202; Spec 002 §FR-128; Plan R13]
+- [x] CHK003 - ¿Son coherentes «definida en un único lugar» (FR-202 de la 003, FR-128 de la 002) y la decisión del plan de poner la paleta oscura en un archivo aparte (`tokens-oscuro.css`, R13)? ¿Está definido qué cuenta como «un único lugar»? [Conflict, Spec 003 §FR-202; Spec 002 §FR-128; Plan R13]
   - *Cambio 2026-11-17*: FR-128 de la 002 define «único lugar» = sistema visual de la 003 con la paleta clara y su variante oscura (mismos nombres de color, solo colores, puede guardarse aparte); nota equivalente en FR-202 de la 003. Coherente con R13 del plan.
-- [ ] CHK004 - ¿Encaja la descripción de paleta «limitada» de FR-202 (un color de marca, una escala de neutros, uno por significado) con una segunda paleta completa, o hace falta una aclaración en la 003 o en la 002? [Consistency, Spec 003 §FR-202]
-- [ ] CHK005 - ¿Dice la spec si la regla de reducir el movimiento (FR-214 de la 003) se aplica también al cambio de tema (por ejemplo, transiciones de color al cambiar de Claro a Oscuro)? [Gap, Spec 003 §FR-214; Spec 002 §FR-118]
-- [ ] CHK006 - ¿Es coherente que FR-212 de la 003 exija los contrastes «en la app y en el PDF» y que FR-127 de la 002 los exija «en ambos temas», sabiendo que el PDF solo tiene tema claro (FR-130)? ¿Queda claro que en el PDF solo se mide la paleta clara? [Clarity, Spec 003 §FR-212; Spec 002 §FR-127, §FR-130]
+- [x] CHK004 - ¿Encaja la descripción de paleta «limitada» de FR-202 (un color de marca, una escala de neutros, uno por significado) con una segunda paleta completa, o hace falta una aclaración en la 003 o en la 002? [Consistency, Spec 003 §FR-202]
+- [x] CHK005 - ¿Dice la spec si la regla de reducir el movimiento (FR-214 de la 003) se aplica también al cambio de tema (por ejemplo, transiciones de color al cambiar de Claro a Oscuro)? [Gap, Spec 003 §FR-214; Spec 002 §FR-118]
+- [x] CHK006 - ¿Es coherente que FR-212 de la 003 exija los contrastes «en la app y en el PDF» y que FR-127 de la 002 los exija «en ambos temas», sabiendo que el PDF solo tiene tema claro (FR-130)? ¿Queda claro que en el PDF solo se mide la paleta clara? [Clarity, Spec 003 §FR-212; Spec 002 §FR-127, §FR-130]
 
 ## Conflictos con la spec 004 (exportar .zip) y con la propia 002
 
-- [ ] CHK007 - ¿Recogen FR-101 y US1 de la 002 que la 004 retiró «Exportar» del menú lateral, o FR-117 («al final del grupo Configuración, antes de Salir») sigue apoyándose en una lista del menú que ya no es la vigente? [Conflict, Spec 002 §FR-101, §US1, §FR-117; Spec 004]
+- [x] CHK007 - ¿Recogen FR-101 y US1 de la 002 que la 004 retiró «Exportar» del menú lateral, o FR-117 («al final del grupo Configuración, antes de Salir») sigue apoyándose en una lista del menú que ya no es la vigente? [Conflict, Spec 002 §FR-101, §US1, §FR-117; Spec 004]
   - *Cambio 2026-11-17*: FR-101 y US1 de la 002 recogen que la 004 retiró «Exportar» y que «Tema» es la última entrada de «Configuración»; FR-117 se sitúa «después de Mi cuenta, con las entradas vigentes de FR-101».
-- [ ] CHK008 - ¿Nombra FR-125 explícitamente la ventana «Exportar…» y su aviso «No hay presupuestos que exportar» de la 004 entre lo que debe verse en oscuro, como hace la guía (F9)? Hoy solo dice «diálogos de confirmación». [Gap, Spec 002 §FR-125; Spec 004 §FR-301a, §FR-315]
+- [x] CHK008 - ¿Nombra FR-125 explícitamente la ventana «Exportar…» y su aviso «No hay presupuestos que exportar» de la 004 entre lo que debe verse en oscuro, como hace la guía (F9)? Hoy solo dice «diálogos de confirmación». [Gap, Spec 002 §FR-125; Spec 004 §FR-301a, §FR-315]
   - *Cambio 2026-11-17*: FR-125 nombra la ventana «Exportar…» de la 004 y su aviso «No hay presupuestos que exportar».
-- [ ] CHK009 - ¿Encaja la exclusión de la 002 «Personalizar el orden o los colores del menú» con un selector que cambia los colores de toda la app, incluido el menú? ¿Se ha aclarado que se refiere a colores elegidos por el usuario, no al tema? [Ambiguity, Spec 002 §Fuera de alcance, §FR-117]
+- [x] CHK009 - ¿Encaja la exclusión de la 002 «Personalizar el orden o los colores del menú» con un selector que cambia los colores de toda la app, incluido el menú? ¿Se ha aclarado que se refiere a colores elegidos por el usuario, no al tema? [Ambiguity, Spec 002 §Fuera de alcance, §FR-117]
 
 ## Coherencia con la spec 001 y la constitución
 
-- [ ] CHK010 - ¿Es coherente guardar la preferencia en el navegador (FR-121) con FR-028 de la 001 («los datos DEBEN guardarse solo en el servidor»)? ¿Está escrito que la preferencia de tema no se considera dato del negocio? [Consistency, Spec 001 §FR-028; Spec 002 §FR-121, §Key Entities]
-- [ ] CHK011 - ¿Son coherentes FR-034 de la 001 («nada accesible sin sesión salvo el inicio de sesión») y FR-124 de la 002 (las pantallas sin sesión siguen al sistema y no tienen selector)? ¿Está claro que el selector y su guardado requieren sesión? [Consistency, Spec 001 §FR-034; Spec 002 §FR-124]
-- [ ] CHK012 - ¿Afecta el supuesto de la 002 «esta iteración no cambia… el contenido del PDF» a FR-130, y queda claro que la paleta clara del PDF no cambia aunque se añada el token del fondo del logo? [Consistency, Spec 002 §Assumptions, §FR-129, §FR-130]
+- [x] CHK010 - ¿Es coherente guardar la preferencia en el navegador (FR-121) con FR-028 de la 001 («los datos DEBEN guardarse solo en el servidor»)? ¿Está escrito que la preferencia de tema no se considera dato del negocio? [Consistency, Spec 001 §FR-028; Spec 002 §FR-121, §Key Entities]
+- [x] CHK011 - ¿Son coherentes FR-034 de la 001 («nada accesible sin sesión salvo el inicio de sesión») y FR-124 de la 002 (las pantallas sin sesión siguen al sistema y no tienen selector)? ¿Está claro que el selector y su guardado requieren sesión? [Consistency, Spec 001 §FR-034; Spec 002 §FR-124]
+- [x] CHK012 - ¿Afecta el supuesto de la 002 «esta iteración no cambia… el contenido del PDF» a FR-130, y queda claro que la paleta clara del PDF no cambia aunque se añada el token del fondo del logo? [Consistency, Spec 002 §Assumptions, §FR-129, §FR-130]
 
 ## Trazabilidad e índice
 
-- [ ] CHK013 - ¿Está documentado en la spec o en el plan por qué la rama se llama `005-modo-oscuro` mientras la spec vive en `002-mejoras-ui-usuarios`, para que la numeración de ramas no se confunda con una spec 005 que no existe? [Traceability, Plan §header; specs/README.md]
-- [ ] CHK014 - ¿Coinciden el estado de la spec 002 (cabecera «Status: Draft») y el de `specs/README.md` («En curso: v1.1 implementada…»), y recoge el README la relación con la 003 en los dos sentidos («amplía» / «Ampliada por»)? [Consistency, Spec 002 §header; specs/README.md]
+- [x] CHK013 - ¿Está documentado en la spec o en el plan por qué la rama se llama `005-modo-oscuro` mientras la spec vive en `002-mejoras-ui-usuarios`, para que la numeración de ramas no se confunda con una spec 005 que no existe? [Traceability, Plan §header; specs/README.md]
+- [x] CHK014 - ¿Coinciden el estado de la spec 002 (cabecera «Status: Draft») y el de `specs/README.md` («En curso: v1.1 implementada…»), y recoge el README la relación con la 003 en los dos sentidos («amplía» / «Ampliada por»)? [Consistency, Spec 002 §header; specs/README.md]
 - [ ] CHK015 - ¿Tiene cada FR nuevo (FR-117 a FR-130) al menos un escenario de US7 o un caso límite que lo cubra, y está enlazado cada SC nuevo (SC-108 a SC-112) a un escenario de la guía? [Traceability, Spec 002 §US7, §SC-108–SC-112; quickstart §F]
 
 ## Notes

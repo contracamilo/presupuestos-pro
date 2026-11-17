@@ -307,6 +307,8 @@ a.fila:hover strong { text-decoration: underline; }
   .linea .botones { grid-column: auto; }
   .linea .botones .boton { white-space: nowrap; }
   #catalogo .linea { grid-template-columns: 2fr 2fr 1fr 1.2fr auto; }
+  /* «Añadir desde el catálogo»: solo tres controles; el botón ocupa su ancho natural y no se desborda. */
+  .linea.linea-catalogo { grid-template-columns: 3fr 1fr auto; }
 }
 
 /* Totales (FR-208): «Total» como cifra más destacada del bloque */
