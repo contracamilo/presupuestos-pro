@@ -12,6 +12,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Despliegue: Docker Compose + Caddy (HTTPS automático) + copias diarias con rclone.
 - Arquitectura: `dominio/` = reglas puras (fiscal, cálculo en céntimos enteros, formatos, estado) sin web ni BD; `rutas/` = una por pantalla, SQL directo; el servidor es la única fuente de cálculo (pantalla y PDF).
 
+## Decisiones transversales por spec (reutilizables en nuevas features)
+- [004] El HTML de un PDF sale solo de `html_pdf(conn, datos)` (`rutas/presupuestos.py`); descarga individual y exportación lo comparten. `generar_pdf` se importa **dentro** de la función de la ruta para poder parchear `presupuestos.pdf.generar_pdf` en los tests.
+- [004] «Descargado» = `emisor_congelado IS NOT NULL` (no se deduce de la etiqueta de estado, porque «Caducado» tiene prioridad). «Exportable» = descargado y `requisitos_descarga(...)` vacío.
+- [004] Rutas de solo lectura que leen varias cosas: `BEGIN` + `ROLLBACK` (un único instante en WAL); el render de PDF va fuera de la transacción. Rutas que generan PDF: `def` síncrona con `Form(...)`, no `async def`, para no bloquear el bucle de eventos.
+- [004] Ventanas modales: `<dialog>` nativo con `showModal()` en `app.js` (sin librería), fuera de los fragmentos que sustituye HTMX. Descargas binarias o con errores visibles: `fetch` + `Blob` desde `app.js`; los errores se devuelven como JSON `{"error": "…"}` y se muestran en un `role="alert"`.
+- [004] `hidden` no funciona en elementos con `.error` o `.mensaje` (fuerzan `display`): añadir `contenedor [hidden] { display: none; }` en `estilos.css`.
+- [004] Nombres de archivo para el usuario: `limpiar_nombre` (`dominio/nombre_archivo.py`) conserva tildes y «ñ»; `nombre_pdf` (descarga individual, sin tildes) no se toca.
+- [004] No hay exportación de datos del negocio (JSON); la única copia de seguridad es `python -m presupuestos copia`. Exportar/importar datos está en `specs/propuestas.md` (P6).
+
 ## Arranque y pruebas en local
 ```bash
 python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
