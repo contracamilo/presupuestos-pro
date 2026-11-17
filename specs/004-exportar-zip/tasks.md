@@ -147,7 +147,7 @@ Proyecto Python único de la 001: `presupuestos/` (aplicación), `tests/`. **No 
 - [X] T028 [P] Revisar `docs/administracion.md` y la propia app (`grep -ri "exportar" presupuestos/templates docs README.md`): cualquier referencia a la descarga del archivo de datos debe apuntar al botón «Exportar…» del historial
 - [X] T029 Ejecutar `.venv/bin/pytest` completo (todo en verde) y `.venv/bin/pytest tests/test_exportar_zip.py -v`
 - [X] T031 Aplicar la decisión D-004-1: quitar el archivo de datos del zip (`datos_exportacion`, `alcance`, `.json`, aviso de copia parcial), exigir presupuestos exportables para exportar (422 si no hay), contar solo PDF en el botón y los textos de la ventana, y actualizar spec, contratos, research (E9, E12), plan, data-model, quickstart y tests
-- [ ] T030 Recorrer [quickstart.md](./quickstart.md) completo (A–H, incluida la prueba con 3 personas de SC-308) en la app, con WeasyPrint real, a 320, 360, 800 y 1280 px, solo teclado y lector de pantalla (§F); anotar cualquier fallo y corregirlo antes de dar la entrega por terminada (constitución, «Verificación de cada entrega»). Marcar en `checklists/exportacion.md` los ítems que el revisor considere satisfechos (solo el revisor las marca)
+- [X] T030 Recorrer [quickstart.md](./quickstart.md) completo (A–H, incluida la prueba con 3 personas de SC-308) en la app, con WeasyPrint real, a 320, 360, 800 y 1280 px, solo teclado y lector de pantalla (§F); anotar cualquier fallo y corregirlo antes de dar la entrega por terminada (constitución, «Verificación de cada entrega»). Marcar en `checklists/exportacion.md` los ítems que el revisor considere satisfechos (solo el revisor las marca)
 
 ---
 

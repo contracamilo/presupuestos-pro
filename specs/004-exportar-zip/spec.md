@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-17
 
-**Status**: Draft (revisada tras D-004-1: el zip lleva solo PDF)
+**Status**: Implemented (revisada tras D-004-1: el zip lleva solo PDF)
 
 **Input**: User description: "Exportar todos mis presupuestos en un .zip: que el autónomo pueda llevarse todos sus presupuestos de una sola vez, en un único archivo comprimido, como copia de seguridad y para archivarlos donde quiera. Un botón «Exportar…» visible en la lista de presupuestos que abre una ventana previa (modal) para elegir entre exportar todo o seleccionar qué presupuestos exportar; el zip contiene un PDF por presupuesto (el mismo que ya genera la app) y un archivo de datos con toda la información (presupuestos, catálogo, perfil y logo). Solo lectura. Sin importar, sin Excel/CSV, sin copias automáticas, sin enviar por email ni a la nube."
 
