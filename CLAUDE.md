@@ -35,6 +35,7 @@ RUTA_BD=datos/presupuestos.db COOKIE_SEGURA=0 .venv/bin/uvicorn presupuestos.app
 - Spec-Driven Development (Spec Kit): especificar → clarificar → plan → tareas → implementar. Todo cambio debe enlazar a un punto de la spec; ideas nuevas van a `specs/propuestas.md`, no se construyen.
 - Todo en español de España (UI, mensajes, PDF, identificadores del código); importes `1.234,56 €`, fechas DD/MM/AAAA en pantalla y ISO en BD.
 - Simplicidad ante todo: sin capas, dependencias ni configuración anticipadas.
+- Al ejecutar `/speckit.plan`, `plan.md` SIEMPRE debe incluir, como último paso de la fase final, un paso de mantenimiento: «Actualizar `CLAUDE.md` con las decisiones de diseño y convenciones nuevas de esta feature, una línea por decisión, con referencia a la spec (p. ej. «[003] …»). No incluir entradas por incluir: solo información transversal y relevante para el proyecto que puedan aprovechar futuras features».
 - Seguridad: CSP estricta (sin scripts/estilos en línea), comprobación de origen en cada escritura, secretos solo en `.env` no versionado.
 - Cada criterio de éxito debe poder verificarse en la app (`quickstart.md` de cada spec); los tests son apoyo.
 
