@@ -30,7 +30,7 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 
 ## E3. Ruta `POST /exportar` — FR-302, FR-305, FR-309
 
-- **Decisión**: `POST /exportar` con campos de formulario `modo` (`todo` | `seleccion`) y `ids` (repetido). Es de **solo lectura**, pero se usa `POST` por el cuerpo; hereda la comprobación de origen de las escrituras (que no estorba). `GET /exportar` desaparece (404). Sin sesión → mismo comportamiento que el resto (redirige a iniciar sesión).
+- **Decisión**: `POST /exportar` con campos de formulario `modo` (`todo` | `seleccion`) y `ids` (repetido). Es de **solo lectura**, pero se usa `POST` por el cuerpo; hereda la comprobación de origen de las escrituras (que no estorba). `GET /exportar` desaparece (responde 405 al existir la ruta para `POST`). Sin sesión → mismo comportamiento que el resto (redirige a iniciar sesión).
 - **Respuestas**: 200 `application/zip` con `Content-Disposition: attachment; filename="…"`; errores `{"error": "…"}` en JSON con 409 (la lista cambió) o 422 (selección vacía, `modo` no válido). Sin presupuestos: 422 `No hay presupuestos que exportar.` (la interfaz ya lo evita, FR-309).
 - **Alternativas descartadas**: mantener `GET /exportar` para el JSON (lo prohíbe FR-314); `GET /exportar.zip?ids=…` (URL larga, sin cuerpo).
 

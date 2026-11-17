@@ -20,7 +20,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 |---|---|---|
 | A1 | En el historial, busca el botón | «Exportar…» visible junto a «Nuevo presupuesto» y **no** hay «Exportar» en el menú lateral |
 | A2 | Pulsa «Exportar…» | Se abre una ventana con «Todo» marcada y «Seleccionar qué exportar»; no se ha descargado nada |
-| A3 | Lee el texto de «Todo» | «Se incluirán 3 PDF. Los 2 presupuestos sin descargar solo irán en el archivo de datos.» (P4 y P5 no tienen PDF) |
+| A3 | Lee el texto de «Todo» | «Se incluirán 3 PDF y el archivo de datos. Los 2 presupuestos sin PDF solo irán en el archivo de datos.» (P4 y P5 no tienen PDF) |
 | A3b | Mira el botón «Descargar .zip» | Dice «(4 archivos)»: 3 PDF + el archivo de datos |
 | A4 | Pulsa «Descargar .zip» | El botón pasa a «Preparando la copia…»; al terminar se descarga **un solo** archivo `presupuestospro-copia-AAAA-MM-DD.zip` con la fecha de hoy y la ventana se cierra |
 | A5 | Descomprime con doble clic | Exactamente 4 archivos: 3 PDF y un `.json` con el mismo nombre base que el zip |
@@ -39,7 +39,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | B4 | Lee el aviso de la ventana | Indica que la copia es parcial y no sirve como copia de seguridad completa |
 | B5 | Marca P1 y P3 → «Descargar .zip» | Se descarga `presupuestospro-seleccion-AAAA-MM-DD.zip` (no «copia») |
 | B6 | Descomprime | 2 PDF (P1 y P3) y un `.json` |
-| B7 | **(Técnico)** Abre el `.json` | `"alcance": "seleccion"`, solo P1 y P3 en `presupuestos` (con sus líneas) y sus clientes; `servicios` y `contadores` vacíos; `perfil` y `ajustes` en `null` |
+| B7 | Abre el `.json` con el Bloc de notas o TextEdit y busca los números de presupuesto (`PRE-…`) | Aparecen **solo** los de P1 y P3 (no P2, P4 ni P5); en el texto se lee `"alcance": "seleccion"` |
 | B8 | Marca algo, vuelve a «Todo» y descarga | Sale la copia completa (4 archivos, nombre «copia») |
 | B8b | Marca y desmarca casillas | El botón pasa de «(1 archivo)» con 0 marcados a «(2 archivos)», «(3 archivos)»…, y vuelve a «(4 archivos)» al elegir «Todo» |
 | B9 | «Marcar todos» | Se marcan todas las casillas de la lista y el recuento coincide |
@@ -49,7 +49,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 
 | # | Paso | Resultado esperado |
 |---|---|---|
-| C1 | **(Técnico)** Abre el `.json` de la copia completa | `"alcance": "completo"`; los 5 presupuestos (incluidos P4 y P5) con sus líneas; catálogo, perfil con logo, ajustes y contadores; **sin** usuarios, contraseñas ni sesiones |
+| C1 | Abre con un editor de texto el `.json` de la copia completa y busca los números `PRE-…`, el nombre de un servicio del catálogo y el nombre de tu perfil | Aparecen los 5 presupuestos (también P4 y P5), el servicio y tu perfil; en el texto se lee `"alcance": "completo"`; no aparece ningún email de otra cuenta ni la palabra `contrasena` |
 | C2 | Compara el historial antes y después de exportar | Mismos presupuestos, estados y numeración; P4 sigue en «Borrador» |
 | C3 | Abre P4 y pulsa «Descargar PDF» | Solo ahora pasa a «Enviado» (la exportación no lo había hecho) |
 | C4 | Crea un presupuesto nuevo tras exportar | Su número es el siguiente al último (la exportación no consumió numeración) |
@@ -63,7 +63,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | D3 | Cliente «Diseño/Web S.L.» | Ya comprobado en A6: el zip se abre sin errores en Windows y macOS |
 | D4 | Cliente con nombre de 150 caracteres | El PDF tiene un nombre razonable (cliente recortado) y el zip se abre bien |
 | D5 | Abre la ventana, y en otra pestaña anonimiza el cliente de un presupuesto marcado; pulsa «Descargar .zip» | Mensaje «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.»; la ventana sigue abierta |
-| D6 | Sin sesión, abre `/exportar` | Te lleva a iniciar sesión; no se descarga nada. Con sesión, abrir `/exportar` en la barra de direcciones (GET) da «página no existe» |
+| D6 | Sin sesión, abre `/exportar` | Te lleva a iniciar sesión; no se descarga nada. Con sesión, abrir `/exportar` en la barra de direcciones (GET) muestra «Esta acción no está permitida» |
 
 ## E. Muchos presupuestos y espera (US3, SC-307)
 
@@ -90,3 +90,9 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | G1 | Descarga individual de un PDF | Igual que antes: mismo nombre `PRE-…_Cliente.pdf` de la 001, mismo contenido |
 | G2 | Busca en el historial con la ventana cerrada y abierta después | La búsqueda funciona y la ventana sigue ofreciendo todos los exportables |
 | G3 | **(Técnico)** `python -m presupuestos copia` | Sigue generando la copia de la base de datos |
+
+## H. Prueba con usuarios (SC-308)
+
+| # | Paso | Resultado esperado |
+|---|---|---|
+| H1 | Pide a 3 personas no técnicas, sin ayuda, que exporten todo y descompriman el zip | Las 3 lo consiguen en menos de 1 minuto cada una. Anota tiempos y dudas |

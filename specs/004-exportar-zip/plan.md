@@ -15,7 +15,7 @@ Sustituir la exportación en archivo de datos (`GET /exportar`) por un botón «
 | Cambio | Por qué | Requisito |
 |---|---|---|
 | `historial.html` + `_exportar_ventana.html` (nuevo): botón «Exportar…» y `<dialog>` | Paso previo con «Todo» / «Seleccionar» | FR-301, 301a–c |
-| `static/app.js`: abrir/cerrar la ventana, marcar todos, recuento, envío con `fetch` y estado «Preparando…» | Estado de espera y errores sin recargar | FR-301c, FR-311, FR-313 |
+| `static/app.js`: abrir/cerrar la ventana, marcar todos, recuento, número de archivos en el botón, envío con `fetch`, estado «Preparando…» y ventana bloqueada mientras se prepara | Estado de espera y errores sin recargar | FR-301c, FR-310a, FR-311, FR-313, FR-313a |
 | `rutas/exportar.py`: `GET /exportar` (JSON) → `POST /exportar` (zip); `datos_exportacion(conn, ids=None)` | Zip único; selección parcial | FR-302, 303, 306, 306a, 314 |
 | `rutas/presupuestos.py`: se extrae `html_pdf(conn, datos)` de `descargar_pdf` (sin cambiar su comportamiento) | El PDF del zip es el mismo que el de la descarga | FR-304 |
 | `dominio/nombre_archivo.py`: `nombre_pdf_zip(numero, cliente)` y `limpiar_nombre` | «número - cliente.pdf» con tildes | FR-307, FR-308 |
@@ -37,7 +37,7 @@ Precisiones de esta iteración:
 - **Descarga**: `fetch` + `Blob` desde `app.js`; admitido por la CSP actual (`default-src 'self'`, sin cambios) (E2).
 - **Coherencia**: una transacción de lectura (`BEGIN`) en WAL para leer todo; el PDF se genera fuera de ella (E4).
 - **Rendimiento**: sin objetivo nuevo más allá del de la 001 (PDF < 3 s por presupuesto); con 50 presupuestos se espera del orden de decenas de segundos, visible con «Preparando la copia…». Se mide en [quickstart.md](./quickstart.md) (E7).
-- **Alcance**: 1 plantilla nueva (fragmento), 1 modificada (`historial.html`) + `base.html`; 1 ruta cambiada; ~60 líneas de JS.
+- **Alcance**: 1 plantilla nueva (fragmento), 1 modificada (`historial.html`) + `base.html`; 1 ruta cambiada; ~120 líneas de JS (ventana, selección, recuento del botón y estado de espera).
 
 No queda ningún «NEEDS CLARIFICATION».
 
