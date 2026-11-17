@@ -119,17 +119,28 @@ def exportar(modo: str = Form(""), ids: list[str] = Form([]), conn: sqlite3.Conn
 
     if modo not in ("todo", "seleccion"):
         return _error(422, "Elige qué exportar.")
-    if modo == "seleccion":  # llega en la historia US1b
-        return _error(422, "Elige qué exportar.")
+    marcados: list[int] | None = None
+    if modo == "seleccion":
+        try:
+            marcados = sorted({int(i) for i in ids})
+        except ValueError:
+            marcados = []
+        if not marcados:
+            return _error(422, "Marca al menos un presupuesto.")
 
     try:
         conn.execute("BEGIN")  # una sola lectura coherente; se cierra con ROLLBACK, nunca escribe
         try:
             if conn.execute("SELECT COUNT(*) FROM presupuestos").fetchone()[0] == 0:
                 return _error(422, "No hay presupuestos que exportar.")
-            datos_archivo = datos_exportacion(conn)
+            exportables = presupuestos_exportables(conn)
+            if marcados is not None:
+                if not set(marcados) <= {e["id"] for e in exportables}:
+                    return _error(409, "La lista ha cambiado. Cierra la ventana y vuelve a abrirla.")
+                exportables = [e for e in exportables if e["id"] in marcados]
+            datos_archivo = datos_exportacion(conn, marcados)
             pdfs = []
-            for e in sorted(presupuestos_exportables(conn), key=lambda e: e["numero"]):
+            for e in sorted(exportables, key=lambda e: e["numero"]):
                 datos = db.cargar_presupuesto(conn, e["id"])
                 pdfs.append((nombre_pdf_zip(e["numero"], e["cliente_nombre"]), html_pdf(conn, datos)))
         finally:
@@ -137,7 +148,7 @@ def exportar(modo: str = Form(""), ids: list[str] = Form([]), conn: sqlite3.Conn
 
         from presupuestos.pdf import generar_pdf  # WeasyPrint solo se carga al generar un PDF
 
-        base = f"presupuestospro-copia-{fechas.hoy()}"
+        base = f"presupuestospro-{'copia' if marcados is None else 'seleccion'}-{fechas.hoy()}"
         salida = io.BytesIO()
         with zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as z:
             z.writestr(f"{base}.json", json.dumps(datos_archivo, ensure_ascii=False, indent=2))

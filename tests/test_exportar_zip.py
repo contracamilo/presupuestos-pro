@@ -178,3 +178,61 @@ def test_historial_incluye_la_ventana(titular, conn, perfil):
     html = titular.get("/").text
     assert 'id="abrir-exportar"' in html and 'id="ventana-exportar"' in html
     assert 'data-exportables="1"' in html and "Descargar .zip" in html
+
+
+# ---------------------------------------------------------------- T014: modo=seleccion
+
+def escenario_seleccion(conn):
+    ids = [crear(conn, "PRE-2026-001", "Estudio García"),
+           crear(conn, "PRE-2026-002", "Diseño/Web S.L."),
+           crear(conn, "PRE-2026-003", "Acme SL")]
+    borrador = crear(conn, "PRE-2026-004", "Borrador SL", descargado=False)
+    anonimo = crear(conn, "PRE-2026-005", "Eliminado", anonimizado=True)
+    return ids, borrador, anonimo
+
+
+def test_seleccion_parcial(titular, conn, perfil, pdf_falso):
+    ids, _, _ = escenario_seleccion(conn)
+    r = titular.post("/exportar", data={"modo": "seleccion", "ids": [str(ids[0]), str(ids[2])]})
+    assert r.status_code == 200
+    base = f"presupuestospro-seleccion-{fechas.hoy()}"
+    assert f'filename="{base}.zip"' in r.headers["Content-Disposition"]
+    z = abrir_zip(r)
+    assert sorted(z.namelist()) == sorted([f"{base}.json", "PRE-2026-001 - Estudio García.pdf",
+                                           "PRE-2026-003 - Acme SL.pdf"])
+    d = json.loads(z.read(f"{base}.json"))
+    assert d["alcance"] == "seleccion"
+    assert sorted(p["numero"] for p in d["datos"]["presupuestos"]) == ["PRE-2026-001", "PRE-2026-003"]
+    assert sorted(c["nombre"] for c in d["datos"]["clientes"]) == ["Acme SL", "Estudio García"]
+    assert d["datos"]["servicios"] == [] and d["datos"]["contadores"] == []
+    assert d["datos"]["perfil"] is None and d["datos"]["ajustes"] is None
+
+
+def test_seleccion_vacia(titular, conn, perfil, pdf_falso):
+    escenario_seleccion(conn)
+    for datos in ({"modo": "seleccion"}, {"modo": "seleccion", "ids": "abc"}):
+        r = titular.post("/exportar", data=datos)
+        assert r.status_code == 422 and r.json() == {"error": "Marca al menos un presupuesto."}
+
+
+def test_seleccion_con_id_no_exportable(titular, conn, perfil, pdf_falso):
+    ids, borrador, anonimo = escenario_seleccion(conn)
+    for malo in (borrador, anonimo, 99999):
+        r = titular.post("/exportar", data={"modo": "seleccion", "ids": [str(ids[0]), str(malo)]})
+        assert r.status_code == 409
+        assert r.json() == {"error": "La lista ha cambiado. Cierra la ventana y vuelve a abrirla."}
+    assert pdf_falso == []  # no se generó nada
+
+
+def test_seleccion_no_incluye_lo_descargado_despues(titular, conn, perfil, pdf_falso):
+    ids, borrador, _ = escenario_seleccion(conn)
+    conn.execute("UPDATE presupuestos SET emisor_congelado = ? WHERE id = ?", (json.dumps(EMISOR), borrador))
+    z = abrir_zip(titular.post("/exportar", data={"modo": "seleccion", "ids": [str(ids[0])]}))
+    assert [n for n in z.namelist() if n.endswith(".pdf")] == ["PRE-2026-001 - Estudio García.pdf"]
+
+
+def test_todo_ignora_los_ids(titular, conn, perfil, pdf_falso):
+    ids, _, _ = escenario_seleccion(conn)
+    r = titular.post("/exportar", data={"modo": "todo", "ids": [str(ids[0])]})
+    z = abrir_zip(r)
+    assert "copia" in r.headers["Content-Disposition"] and len([n for n in z.namelist() if n.endswith(".pdf")]) == 3
