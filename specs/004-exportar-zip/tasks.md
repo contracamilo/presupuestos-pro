@@ -140,10 +140,10 @@ Proyecto Python único de la 001: `presupuestos/` (aplicación), `tests/`. **No 
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T026 [P] Actualizar `README.md`: en «Operations» sustituir «Full data export as JSON» por la exportación en .zip (ventana «Todo» / «Seleccionar», PDF + archivo de datos) y mantener las copias de seguridad por línea de comandos; actualizar la tabla de specs con la 004
-- [ ] T027 [P] Actualizar `specs/README.md`: añadir la fila de la 004 (estado «Implementada» solo al terminar, con T-numeros pendientes) y el nuevo recuento de tareas; y en `specs/001-presupuestos-pro/contracts/archivo-exportacion.md` y `rutas-http.md` (línea de `GET /exportar`) añadir una nota «Sustituido por la spec 004» enlazando a los contratos de la 004
-- [ ] T028 [P] Revisar `docs/administracion.md` y la propia app (`grep -ri "exportar" presupuestos/templates docs README.md`): cualquier referencia a la descarga del archivo de datos debe apuntar al botón «Exportar…» del historial
-- [ ] T029 Ejecutar `.venv/bin/pytest` completo (todo en verde) y `.venv/bin/pytest tests/test_exportar_zip.py -v`
+- [X] T026 [P] Actualizar `README.md`: en «Operations» sustituir «Full data export as JSON» por la exportación en .zip (ventana «Todo» / «Seleccionar», PDF + archivo de datos) y mantener las copias de seguridad por línea de comandos; actualizar la tabla de specs con la 004
+- [X] T027 [P] Actualizar `specs/README.md`: añadir la fila de la 004 (estado «Implementada» solo al terminar, con T-numeros pendientes) y el nuevo recuento de tareas; y en `specs/001-presupuestos-pro/contracts/archivo-exportacion.md` y `rutas-http.md` (línea de `GET /exportar`) añadir una nota «Sustituido por la spec 004» enlazando a los contratos de la 004
+- [X] T028 [P] Revisar `docs/administracion.md` y la propia app (`grep -ri "exportar" presupuestos/templates docs README.md`): cualquier referencia a la descarga del archivo de datos debe apuntar al botón «Exportar…» del historial
+- [X] T029 Ejecutar `.venv/bin/pytest` completo (todo en verde) y `.venv/bin/pytest tests/test_exportar_zip.py -v`
 - [ ] T030 Recorrer [quickstart.md](./quickstart.md) completo (A–H, incluida la prueba con 3 personas de SC-308) en la app, con WeasyPrint real, a 320, 360, 800 y 1280 px, solo teclado y lector de pantalla (§F); anotar cualquier fallo y corregirlo antes de dar la entrega por terminada (constitución, «Verificación de cada entrega»). Marcar en `checklists/exportacion.md` los ítems que el revisor considere satisfechos (solo el revisor las marca)
 
 ---
