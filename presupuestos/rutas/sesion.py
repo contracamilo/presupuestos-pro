@@ -1,14 +1,16 @@
-"""Inicio y cierre de sesión y creación de la cuenta del titular (FR-034, FR-037, FR-038, FR-108 a FR-110)."""
+"""Inicio y cierre de sesión, creación de la cuenta del titular y elección de tema
+(FR-034, FR-037, FR-038, FR-108 a FR-110, FR-117 a FR-122)."""
 
 import os
 import sqlite3
 
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import RedirectResponse, Response
+from starlette.routing import Match, Mount
 
 from presupuestos import db, seguridad
 from presupuestos.db import get_db
-from presupuestos.rutas import COOKIE, pagina
+from presupuestos.rutas import COOKIE, COOKIE_TEMA, TEMAS, pagina, usuario_actual
 
 router = APIRouter()
 
@@ -115,3 +117,55 @@ def salir(request: Request, conn: sqlite3.Connection = Depends(get_db)):
     respuesta = RedirectResponse("/entrar", status_code=303)
     respuesta.delete_cookie(COOKIE, path="/")
     return respuesta
+
+
+# ---------------------------------------------------------------- Tema (FR-117 a FR-122, research R12, R15)
+# Guarda la elección en la cookie `tema` del dispositivo; no toca la base de datos. Cerrar sesión no
+# la borra. app.js la envía con la cabecera X-Tema-Fetch (204); sin JS, el formulario recarga la pantalla.
+
+DURACION_TEMA = 400 * 24 * 60 * 60  # 400 días: el máximo que admiten los navegadores
+
+
+def _destino(request: Request, volver: str) -> str:
+    """`volver` solo si es una ruta interna que la app abre con GET; si no, el historial (FR-120).
+
+    Así no se redirige a otro sitio y no se da un 405 cuando la pantalla actual es la respuesta de un
+    envío con errores (p. ej. /mi-cuenta/contrasena, que solo admite POST).
+    """
+    if not volver.startswith("/") or volver.startswith("//"):
+        return "/"
+    # Se pregunta a cada ruta registrada si atiende un GET a esa dirección (sin la consulta).
+    # Match.FULL = coincide la dirección y el método; los archivos estáticos (Mount) no cuentan.
+    alcance = {"type": "http", "method": "GET", "path": volver.split("?")[0],
+               "root_path": "", "headers": [], "query_string": b""}
+    for r in request.app.routes:
+        if not isinstance(r, Mount) and r.matches(alcance)[0] == Match.FULL:
+            return volver
+    return "/"
+
+
+def _poner_cookie_tema(respuesta: Response, tema: str) -> Response:
+    respuesta.set_cookie(
+        COOKIE_TEMA,
+        tema,
+        max_age=DURACION_TEMA,
+        httponly=True,
+        samesite="lax",
+        secure=os.environ.get("COOKIE_SEGURA", "1") == "1",
+        path="/",
+    )
+    return respuesta
+
+
+@router.post("/tema")
+def elegir_tema(
+    request: Request,
+    tema: str = Form(""),
+    volver: str = Form(""),
+    _usuario: dict = Depends(usuario_actual),
+):
+    if tema not in TEMAS:
+        raise HTTPException(status_code=422)
+    if request.headers.get("X-Tema-Fetch") == "1":
+        return _poner_cookie_tema(Response(status_code=204), tema)
+    return _poner_cookie_tema(RedirectResponse(_destino(request, volver), status_code=303), tema)

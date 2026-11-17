@@ -60,6 +60,60 @@
     if (e.key === "Escape" && menuAbierto()) cerrarMenu(true);
   });
 
+  // ------------------------------------------------------------ tema (spec 002, FR-117 a FR-120, R15)
+  // Al elegir una opción se aplica en el momento (sin recargar ni tocar el resto de la página) y se
+  // guarda con fetch. No es una petición HTMX: no cuenta como guardado pendiente (R3).
+  // Misma tabla que APARIENCIA en rutas/__init__.py: [media de #tokens-oscuro, content del meta].
+
+  var APARIENCIA = {
+    claro: ["not all", "light"],
+    oscuro: ["all", "dark"],
+    sistema: ["(prefers-color-scheme: dark)", "light dark"]
+  };
+
+  function aplicarTema(valor) {
+    var par = APARIENCIA[valor];
+    if (!par) return;
+    var hoja = document.getElementById("tokens-oscuro");
+    var meta = document.querySelector("meta[name=color-scheme]");
+    if (hoja) hoja.media = par[0];
+    if (meta) meta.content = par[1];
+  }
+
+  function guardarTema(form) {
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { "X-Tema-Fetch": "1" },
+      credentials: "same-origin"
+    })
+      .then(function (r) { aviso(!r.ok); })
+      .catch(function () { aviso(true); }); // el tema queda aplicado en la página
+  }
+
+  function cambiarTema(form) {
+    var marcado = form.querySelector("input[name=tema]:checked");
+    if (!marcado) return;
+    aplicarTema(marcado.value);
+    guardarTema(form);
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.name !== "tema" || !e.target.closest) return;
+    var form = e.target.closest("form.form-tema");
+    if (form) cambiarTema(form);
+  });
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || !form.classList || !form.classList.contains("form-tema")) return;
+    e.preventDefault(); // Intro sobre una opción
+    cambiarTema(form);
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    // «Aplicar» solo hace falta sin JavaScript (FR-120).
+    document.querySelectorAll(".aplicar-tema").forEach(function (b) { b.hidden = true; });
+  });
+
   // ------------------------------------------------------------ ventana «Exportar» (spec 004, E1, E2)
   // <dialog> nativo: showModal() ya atrapa el foco, cierra con Esc y devuelve el foco al botón.
   // El envío usa fetch para poder mostrar los errores sin salir de la página.

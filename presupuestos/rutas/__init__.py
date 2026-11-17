@@ -26,6 +26,34 @@ plantillas.env.globals["etiquetas_estado"] = estado.ETIQUETAS
 
 COOKIE = "sesion"
 
+# ------------------------------------------------------------ tema (FR-121 a FR-126, research R12, R14)
+# Se recuerda por dispositivo en la cookie `tema`. El servidor pinta cada página ya con el tema
+# correcto (sin destello): base.html pone el `media` del enlace a tokens-oscuro.css y el `content`
+# del meta color-scheme según esta tabla. Con «sistema» es el navegador quien sigue al dispositivo.
+COOKIE_TEMA = "tema"
+TEMAS = ("claro", "oscuro", "sistema")
+APARIENCIA = {  # tema: (media del <link id="tokens-oscuro">, content del <meta name="color-scheme">)
+    "claro": ("not all", "light"),
+    "oscuro": ("all", "dark"),
+    "sistema": ("(prefers-color-scheme: dark)", "light dark"),
+}
+
+
+def tema_actual(request: Request) -> str:
+    """Tema de la cookie si es válido y hay sesión; si no, «sistema» (FR-122, FR-124).
+
+    `request.state.usuario` lo pone `usuario_actual`: las páginas sin sesión (entrar, crear titular,
+    errores de direcciones inexistentes) no lo tienen y por eso siguen al sistema.
+    """
+    tema = request.cookies.get(COOKIE_TEMA)
+    if tema in TEMAS and getattr(request.state, "usuario", None):
+        return tema
+    return "sistema"
+
+
+plantillas.env.globals["tema_actual"] = tema_actual
+plantillas.env.globals["APARIENCIA"] = APARIENCIA
+
 
 class SinSesion(Exception):
     """Se convierte en 303 a /entrar o en 401 con HX-Redirect (app.py)."""

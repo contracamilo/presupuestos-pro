@@ -1,0 +1,41 @@
+/* PresupuestosPro — Paleta oscura (spec 002, US7, FR-125, FR-127, FR-128).
+   Mismos nombres de color que tokens.css, con valores oscuros; nada más (ni tamaños, ni tipografía,
+   ni separaciones). base.html la carga después de tokens.css con un `media` según el tema elegido
+   (Claro: nunca; Oscuro: siempre; Como el sistema: si el dispositivo está en oscuro).
+   El PDF no la usa: solo lee tokens.css y sale siempre en claro (FR-130).
+   Valores y contrastes: specs/002-mejoras-ui-usuarios/contracts/tema.md (comprobados en tests/test_paleta.py).
+   --color-fondo-logo no se redefine: la vista previa del logo es blanca en los dos temas (FR-129). */
+
+:root {
+  color-scheme: dark;
+
+  --color-texto: #e6e9ee;
+  --color-texto-suave: #a9b3bf;
+  --color-marca: #7fb2e5;
+  --color-marca-hover: #a5c9ee;
+  --color-marca-claro: #1d3349;
+  --color-borde-control: #7d8a99;
+  --color-borde: #323b46;
+  --color-fondo: #14191f;
+  --color-fondo-2: #1c232b;
+  --color-sobre-marca: #0d1620;
+  --color-superposicion: rgba(0, 0, 0, .6);
+  --color-sombra: rgba(0, 0, 0, .4);
+  --color-exito: #6fcf97;
+  --color-exito-fondo: #16301f;
+  --color-aviso: #f2c46d;
+  --color-aviso-fondo: #33270f;
+  --color-error: #ff8a80;
+  --color-error-fondo: #3a1a18;
+
+  --estado-borrador-texto: #b8c1cc;
+  --estado-borrador-fondo: #262d36;
+  --estado-enviado-texto: #8fbde9;
+  --estado-enviado-fondo: #1d3349;
+  --estado-caducado-texto: #f5a962;
+  --estado-caducado-fondo: #3a2412;
+  --estado-aceptado-texto: #6fcf97;
+  --estado-aceptado-fondo: #16301f;
+  --estado-rechazado-texto: #ff8a80;
+  --estado-rechazado-fondo: #3a1a18;
+}
