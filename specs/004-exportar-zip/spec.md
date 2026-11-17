@@ -35,6 +35,13 @@
 
 - Q: ¿Cómo debe llamarse el .zip cuando se exporta una selección, para no confundirlo con una copia completa? → A: Con «Todo»: `presupuestospro-copia-AAAA-MM-DD.zip`; con «Seleccionar»: `presupuestospro-seleccion-AAAA-MM-DD.zip`.
 
+### Session 2026-11-17 (clarify 2: conflictos de la checklist)
+
+- Q: ¿Cómo se define «exportable» de forma única, ya que FR-303 solo decía «ya descargado»? → A: Se añade la entidad «Presupuesto exportable» (descargado y con PDF aún generable) y se usa en FR-301b y FR-303 (CHK009).
+- Q: ¿Qué promete FR-306 sobre el contenido del archivo de datos, dado el campo nuevo de alcance y la selección parcial? → A: Misma estructura y campos que la exportación actual, más una indicación de si la copia es completa o de selección (CHK012).
+- Q: Si un presupuesto marcado deja de ser exportable antes de descargar, ¿qué hace la app? → A: Error: no se descarga nada y se avisa «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.» (CHK018).
+- Q: ¿Qué se hace con el volumen máximo, dado que el zip pasa por la memoria del navegador? → A: Sin tope técnico; se documenta como volumen soportado y probado hasta 200 presupuestos (CHK021). Petición añadida: el botón «Descargar .zip» muestra el número de archivos del zip (FR-310a).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Llevarme todos mis presupuestos de una vez (Priority: P1)
@@ -115,7 +122,7 @@ Como autónomo con muchos presupuestos, quiero ver que la app está preparando l
 - **Sin presupuestos**: al pulsar «Exportar…», en lugar de la ventana de opciones se muestra un aviso claro («No hay presupuestos que exportar») y no se descarga ningún zip vacío.
 - **Presupuestos, pero ninguno descargado todavía**: con «Todo» el zip se descarga con el archivo de datos y sin PDF, y el texto de la ventana avisa de ello antes de pulsar. La opción «Seleccionar» aparece desactivada, con el motivo («Aún no hay presupuestos descargados»).
 - **Selección con muchos presupuestos**: la lista de selección admite desplazamiento dentro de la ventana y «Marcar todos» marca todos los de la lista, no solo los visibles.
-- **Presupuesto que cambia mientras la ventana está abierta** (otra persona descarga un borrador): la selección se aplica sobre los presupuestos de la lista tal como se mostró; los demás no se incluyen.
+- **Presupuesto que cambia mientras la ventana está abierta**: si otra persona descarga un borrador, la selección se aplica sobre los presupuestos de la lista tal como se mostró y los nuevos no se incluyen. Si un presupuesto marcado deja de ser exportable (p. ej. se anonimiza su cliente), no se descarga nada y se avisa con «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.» (FR-313a).
 - **Nombre de cliente con caracteres conflictivos** («Diseño/Web S.L.», con `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`): el nombre del PDF se limpia (esos caracteres se sustituyen o eliminan) y el zip se abre sin errores.
 - **Nombre de cliente muy largo o que queda vacío tras la limpieza**: el nombre del PDF queda con una longitud razonable y, si no hay nombre utilizable, se usa el texto fijo «Sin cliente».
 - **Clientes archivados**: sus presupuestos se exportan igual.
@@ -130,28 +137,31 @@ Como autónomo con muchos presupuestos, quiero ver que la app está preparando l
 
 - **FR-301**: La lista de presupuestos DEBE mostrar de forma visible un botón «Exportar…», disponible para cualquier cuenta con sesión iniciada. Al pulsarlo se abre una ventana modal previa; no se descarga nada hasta confirmar en ella con «Descargar .zip».
 - **FR-301a**: La ventana DEBE ofrecer dos opciones: «Todo» (marcada por defecto) y «Seleccionar qué exportar». Con «Seleccionar», DEBE mostrar una lista con una casilla por presupuesto (número, cliente y estado), una opción «Marcar todos» y el recuento de marcados.
-- **FR-301b**: La lista de selección DEBE ofrecer únicamente presupuestos ya descargados; los borradores NO aparecen. Sin ninguna casilla marcada, «Descargar .zip» DEBE estar desactivado con una indicación de que hay que marcar al menos un presupuesto.
+- **FR-301b**: La lista de selección DEBE ofrecer únicamente presupuestos exportables; los borradores y los descargados cuyo PDF la app ya no puede generar NO aparecen. Sin ninguna casilla marcada, «Descargar .zip» DEBE estar desactivado con una indicación de que hay que marcar al menos un presupuesto.
 - **FR-301c**: La ventana DEBE poder cerrarse con «Cancelar», con la tecla Esc o pulsando fuera, sin descargar ni cambiar nada. Debe ser accesible con teclado y lector de pantalla (foco dentro de la ventana mientras está abierta y devuelto al botón «Exportar…» al cerrarla) y usable desde 320 px de ancho.
 - **FR-302**: Al confirmar, el sistema DEBE descargar **un único** archivo .zip, con la fecha del día de la exportación: `presupuestospro-copia-AAAA-MM-DD.zip` con «Todo» y `presupuestospro-seleccion-AAAA-MM-DD.zip` con «Seleccionar».
-- **FR-303**: Con «Todo», el zip DEBE contener un PDF por cada presupuesto ya descargado (con su emisor fijado) y un único archivo de datos. Con «Seleccionar», DEBE contener un PDF por cada presupuesto marcado y un único archivo de datos. No DEBE contener nada más.
+- **FR-303**: Con «Todo», el zip DEBE contener un PDF por cada presupuesto **exportable** (ver Key Entities) y un único archivo de datos. Con «Seleccionar», DEBE contener un PDF por cada presupuesto marcado y un único archivo de datos. No DEBE contener nada más.
 - **FR-304**: Cada PDF del zip DEBE ser el mismo documento que genera la app al descargar ese presupuesto (mismo contenido, aspecto, importes y datos del emisor fijados), con los importes cuadrando al céntimo.
 - **FR-305**: La exportación DEBE ser de solo lectura: no DEBE cambiar el estado de ningún presupuesto, fijar datos del emisor, consumir numeración ni modificar ningún otro dato.
-- **FR-306**: Con «Todo», el archivo de datos DEBE incluir todos los presupuestos (también los borradores, con sus líneas), clientes, el catálogo de servicios, el perfil del autónomo con su logo, los ajustes y los contadores de numeración, con el mismo contenido que la exportación actual. NO DEBE incluir cuentas de usuario ni nada relacionado con contraseñas o sesiones.
+- **FR-306**: Con «Todo», el archivo de datos DEBE incluir todos los presupuestos (también los borradores, con sus líneas), clientes, el catálogo de servicios, el perfil del autónomo con su logo, los ajustes y los contadores de numeración, con la misma estructura y los mismos campos que la exportación actual, más una indicación de si la copia es completa o de una selección. NO DEBE incluir cuentas de usuario ni nada relacionado con contraseñas o sesiones.
 - **FR-306a**: Con «Seleccionar», el archivo de datos DEBE contener solo los presupuestos marcados, con sus líneas y los clientes a los que pertenecen (y el logo que muestran sus PDF), y NO el resto de presupuestos, el catálogo, los ajustes ni los contadores de numeración.
 - **FR-306b**: Cuando se elige «Seleccionar», la ventana DEBE avisar, antes de descargar, de que esa copia es parcial y no sirve como copia de seguridad completa.
 - **FR-307**: Cada PDF del zip DEBE llamarse «número - cliente.pdf», con el número tal como lo muestra la app (p. ej. `PRE-2026-001 - Estudio García.pdf`).
 - **FR-308**: Los nombres de archivo DEBEN limpiarse de caracteres no válidos en nombres de archivo, y tener una longitud razonable, de modo que el zip se abra sin errores en los sistemas habituales; los nombres con tildes y «ñ» DEBEN conservarse.
 - **FR-309**: Sin presupuestos, el sistema DEBE avisar con un mensaje claro de que no hay nada que exportar y NO DEBE descargar ningún zip.
 - **FR-310**: En la ventana DEBE mostrarse cuántos PDF incluirá el zip con la opción elegida y, con «Todo», si hay presupuestos aún sin descargar, que estos solo irán en el archivo de datos. Si no hay ningún presupuesto descargado, «Seleccionar» DEBE aparecer desactivada con el motivo.
+- **FR-310a**: El botón «Descargar .zip» DEBE indicar cuántos archivos llevará el zip con la opción elegida, contando los PDF y el archivo de datos (p. ej. «Descargar .zip (4 archivos)»; «1 archivo» en singular), y actualizarse al marcar o desmarcar presupuestos o cambiar de opción.
 - **FR-311**: Mientras se prepara la copia, el botón «Descargar .zip» DEBE quedar desactivado y mostrar «Preparando la copia…», sin permitir una segunda exportación simultánea, y volver a su estado normal al empezar la descarga.
 - **FR-312**: La copia DEBE reflejar los datos de un único instante coherente, aunque otra persona esté trabajando mientras se prepara.
 - **FR-313**: Si la preparación falla, el sistema DEBE mostrar un mensaje claro en español de España y NO DEBE dejar datos a medias.
+- **FR-313a**: Si algún presupuesto marcado ya no es exportable al confirmar, el sistema NO DEBE descargar nada (ni siquiera una copia sin ese presupuesto) y DEBE mostrar el aviso «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.», dejando la ventana abierta.
 - **FR-314**: La exportación en archivo de datos suelto que existe hoy DEBE retirarse; el zip pasa a ser la única exportación de la app. Los textos, ayudas y documentación que la mencionen DEBEN actualizarse.
 - **FR-315**: Todos los textos nuevos DEBEN estar en español de España y el botón, la ventana y los avisos DEBEN cumplir el sistema visual y los criterios de accesibilidad de la spec 003.
 
 ### Key Entities
 
 - **Copia exportada**: el archivo .zip descargado. Contiene los PDF de los presupuestos ya descargados y un archivo de datos. No se guarda en la app ni deja rastro: cada exportación se genera en el momento.
+- **Presupuesto exportable**: el que ya se ha descargado (tiene sus datos de emisor fijados) **y** cuyo PDF la app todavía puede generar con las mismas reglas que la descarga individual (p. ej. no, si su cliente se anonimizó después). Es el único que tiene PDF en el zip y el único que se ofrece en la lista de selección. Los demás solo van en el archivo de datos con «Todo».
 - **PDF de presupuesto**: el documento que ya existe para cada presupuesto descargado; la copia incluye el mismo, sin variantes.
 - **Archivo de datos**: con «Todo», la información completa del negocio (presupuestos con líneas, clientes, catálogo, perfil con logo, ajustes y contadores), pensada para poder restaurar la aplicación en el futuro. Con «Seleccionar», solo los presupuestos marcados con sus líneas y clientes. Nunca incluye cuentas ni contraseñas.
 - **Selección**: el conjunto de presupuestos ya descargados que el autónomo marca en la ventana; existe solo mientras la ventana está abierta y no se guarda.
@@ -180,7 +190,7 @@ Como autónomo con muchos presupuestos, quiero ver que la app está preparando l
 - La fecha del nombre del zip es la del día en España al pulsar el botón (la misma que usa la app en el resto de pantallas).
 - El archivo de datos conserva el nombre y el formato de la exportación actual dentro del zip, para poder restaurarlo en la futura spec de importación.
 - Cualquier cuenta con sesión puede exportar, igual que hoy con la exportación actual; el archivo no incluye cuentas ni contraseñas, por lo que puede viajar sin ese riesgo (FR-036 de la 001).
-- No hay límite de presupuestos; el volumen previsto es de cientos.
+- Volumen soportado y probado: hasta 200 presupuestos exportados de una vez. No hay tope técnico; si se superase la capacidad del navegador, se mostraría el error genérico de FR-313.
 
 ## Fuera de alcance
 

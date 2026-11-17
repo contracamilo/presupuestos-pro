@@ -26,7 +26,7 @@ Stack y convenciones: [001](../001-presupuestos-pro/plan.md), [002](../002-mejor
 - **Decisión**: el formulario de la ventana lo intercepta `app.js`: desactiva «Descargar .zip», cambia su texto a «Preparando la copia…», hace `fetch(POST /exportar)`, y con la respuesta crea un `Blob`, un enlace `<a download>` temporal y lo pulsa; al terminar cierra la ventana y restaura el botón. Si la respuesta no es 200 muestra el mensaje JSON `{"error": …}` en un `role="alert"` dentro de la ventana, sin cerrarla.
 - **Motivo**: un formulario normal no avisa de cuándo termina la preparación ni permite mostrar un error sin salir de la página. Con `fetch` ambas cosas son directas y la CSP no cambia.
 - **Alternativas descartadas**: envío normal del formulario + cookie «descarga terminada» consultada por JS (más piezas y el error de servidor navega fuera de la página); descarga por `GET` con enlace (la selección no cabe de forma fiable en la URL con 200 presupuestos); `htmx` (no maneja descargas binarias).
-- **Límite asumido**: el zip pasa por la memoria del navegador (Blob). Con cientos de presupuestos son decenas de MB; aceptable para el volumen de la spec (cientos).
+- **Límite asumido**: el zip pasa por la memoria del navegador (Blob). Con cientos de presupuestos son decenas de MB; la spec documenta como volumen soportado y probado hasta 200 presupuestos y no impone tope técnico (clarificación CHK021); el quickstart E2 lo comprueba.
 
 ## E3. Ruta `POST /exportar` — FR-302, FR-305, FR-309
 

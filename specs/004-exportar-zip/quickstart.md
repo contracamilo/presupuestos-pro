@@ -21,6 +21,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | A1 | En el historial, busca el botón | «Exportar…» visible junto a «Nuevo presupuesto» y **no** hay «Exportar» en el menú lateral |
 | A2 | Pulsa «Exportar…» | Se abre una ventana con «Todo» marcada y «Seleccionar qué exportar»; no se ha descargado nada |
 | A3 | Lee el texto de «Todo» | «Se incluirán 3 PDF. Los 2 presupuestos sin descargar solo irán en el archivo de datos.» (P4 y P5 no tienen PDF) |
+| A3b | Mira el botón «Descargar .zip» | Dice «(4 archivos)»: 3 PDF + el archivo de datos |
 | A4 | Pulsa «Descargar .zip» | El botón pasa a «Preparando la copia…»; al terminar se descarga **un solo** archivo `presupuestospro-copia-AAAA-MM-DD.zip` con la fecha de hoy y la ventana se cierra |
 | A5 | Descomprime con doble clic | Exactamente 4 archivos: 3 PDF y un `.json` con el mismo nombre base que el zip |
 | A6 | Mira los nombres de los PDF | `PRE-… - Estudio García.pdf` (con tilde), `PRE-… - Diseño Web S.L.pdf` (sin la `/`, y la «ñ» conservada), sin errores al abrir el zip |
@@ -40,6 +41,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | B6 | Descomprime | 2 PDF (P1 y P3) y un `.json` |
 | B7 | **(Técnico)** Abre el `.json` | `"alcance": "seleccion"`, solo P1 y P3 en `presupuestos` (con sus líneas) y sus clientes; `servicios` y `contadores` vacíos; `perfil` y `ajustes` en `null` |
 | B8 | Marca algo, vuelve a «Todo» y descarga | Sale la copia completa (4 archivos, nombre «copia») |
+| B8b | Marca y desmarca casillas | El botón pasa de «(1 archivo)» con 0 marcados a «(2 archivos)», «(3 archivos)»…, y vuelve a «(4 archivos)» al elegir «Todo» |
 | B9 | «Marcar todos» | Se marcan todas las casillas de la lista y el recuento coincide |
 | B10 | Cierra con «Cancelar», con Esc y con un clic fuera | La ventana se cierra, no se descarga nada; el foco vuelve al botón «Exportar…» |
 
