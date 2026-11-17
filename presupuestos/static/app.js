@@ -71,6 +71,8 @@
     if (!ventana || !e.target.closest) return;
     if (e.target.closest("#abrir-exportar")) {
       ventana.showModal();
+    } else if (preparando) {
+      return; // no se cierra mientras se prepara la copia
     } else if (e.target === ventana) {
       ventana.close(); // clic sobre el fondo, no sobre el contenido
     } else if (e.target.closest("[data-cerrar-exportar]")) {
@@ -91,16 +93,51 @@
     error.hidden = false;
   }
 
+  // Estado de espera (US3): mientras se prepara la copia no se puede enviar otra ni cerrar la ventana.
+  var preparando = false;
+  var MENSAJE_FALLO = "No se ha podido preparar la copia. Inténtalo de nuevo.";
+
+  function controlesExportar() {
+    return document.querySelectorAll("#form-exportar input, #form-exportar button");
+  }
+
+  function ponerEsperaExportar(form, activa) {
+    preparando = activa;
+    if (activa) {
+      form.setAttribute("aria-busy", "true");
+      Array.prototype.forEach.call(controlesExportar(), function (c) {
+        c.setAttribute("data-estaba-desactivado", c.disabled ? "1" : "");
+        c.disabled = true;
+      });
+      document.getElementById("exportar-descargar").textContent = "Preparando la copia…";
+    } else {
+      form.removeAttribute("aria-busy");
+      Array.prototype.forEach.call(controlesExportar(), function (c) {
+        c.disabled = c.getAttribute("data-estaba-desactivado") === "1";
+        c.removeAttribute("data-estaba-desactivado");
+      });
+      actualizarExportar(); // vuelve a calcular el texto del botón y las casillas
+    }
+  }
+
+  document.addEventListener("cancel", function (e) {
+    if (preparando && e.target && e.target.id === "ventana-exportar") e.preventDefault(); // Esc
+  }, true);
+
   document.addEventListener("submit", function (e) {
     var form = e.target;
     if (!form || form.id !== "form-exportar") return;
     e.preventDefault();
+    if (preparando) return;
     var error = document.getElementById("exportar-error");
     if (error) error.hidden = true;
-    fetch(form.action, { method: "POST", body: new FormData(form) })
+    var datos = new FormData(form); // antes de desactivar los controles
+    ponerEsperaExportar(form, true);
+    fetch(form.action, { method: "POST", body: datos })
       .then(function (r) {
         if (!r.ok) {
-          return r.json().then(function (d) { throw new Error(d.error); }, function () { throw new Error(""); });
+          return r.json().then(function (d) { throw new Error(d.error || MENSAJE_FALLO); },
+                               function () { throw new Error(MENSAJE_FALLO); });
         }
         return r.blob().then(function (blob) {
           var url = URL.createObjectURL(blob);
@@ -111,11 +148,13 @@
           enlace.click();
           document.body.removeChild(enlace);
           URL.revokeObjectURL(url);
+          ponerEsperaExportar(form, false);
           ventanaExportar().close();
         });
       })
       .catch(function (err) {
-        mostrarErrorExportar(err && err.message ? err.message : "No se ha podido preparar la copia. Inténtalo de nuevo.");
+        ponerEsperaExportar(form, false);
+        mostrarErrorExportar(err && err.message ? err.message : MENSAJE_FALLO);
       });
   });
 
