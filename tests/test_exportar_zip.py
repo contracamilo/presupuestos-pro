@@ -300,3 +300,24 @@ def test_lectura_de_un_solo_instante(titular, conn, perfil, pdf_falso, monkeypat
     assert hecho
     assert "PRE-2026-099" not in str(json_) and not any("099" in n or "Borrador" in n for n in nombres)
     assert len([n for n in nombres if n.endswith(".pdf")]) == 3
+
+
+# ---------------------------------------------------------------- T020: recuento en la ventana
+
+def test_recuento_de_la_ventana(titular, conn, perfil):
+    crear(conn, "PRE-2026-001")
+    crear(conn, "PRE-2026-002")
+    crear(conn, "PRE-2026-003", descargado=False)
+    html = " ".join(titular.get("/").text.split())
+    assert "Se incluirán 2 PDF y el archivo de datos." in html
+    assert "El presupuesto sin PDF solo irá en el archivo de datos." in html
+    assert "Descargar .zip (3 archivos)" in html
+    crear(conn, "PRE-2026-004", descargado=False)
+    assert "Los 2 presupuestos sin PDF solo irán en el archivo de datos." in " ".join(titular.get("/").text.split())
+
+
+def test_recuento_sin_exportables(titular, conn, perfil):
+    crear(conn, "PRE-2026-001", descargado=False)
+    html = " ".join(titular.get("/").text.split())
+    assert "No hay ningún presupuesto con PDF; la copia llevará solo el archivo de datos." in html
+    assert "Descargar .zip (1 archivo)" in html

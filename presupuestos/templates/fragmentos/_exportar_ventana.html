@@ -15,6 +15,15 @@
         <input type="radio" name="modo" value="todo" id="modo-todo" checked>
         Todo
       </label>
+      <div id="recuento-todo" class="suave" aria-live="polite">
+        {% if resumen.exportables == 0 %}
+        <p>No hay ningún presupuesto con PDF; la copia llevará solo el archivo de datos.</p>
+        {% else %}
+        <p>{{ "Se incluirá 1 PDF" if resumen.exportables == 1 else "Se incluirán " ~ resumen.exportables ~ " PDF" }} y el archivo de datos.
+        {% if resumen.solo_datos == 1 %}El presupuesto sin PDF solo irá en el archivo de datos.
+        {% elif resumen.solo_datos > 1 %}Los {{ resumen.solo_datos }} presupuestos sin PDF solo irán en el archivo de datos.{% endif %}</p>
+        {% endif %}
+      </div>
       <label class="casilla" for="modo-seleccion">
         <input type="radio" name="modo" value="seleccion" id="modo-seleccion"{% if resumen.exportables == 0 %} disabled{% endif %}>
         Seleccionar qué exportar
@@ -42,7 +51,7 @@
     {% endif %}
     <p id="exportar-error" class="error" role="alert" hidden></p>
     <div class="acciones">
-      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip</button>
+      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip ({{ resumen.exportables + 1 }} {{ "archivo" if resumen.exportables == 0 else "archivos" }})</button>
       <button type="button" class="boton secundario" id="exportar-cancelar" data-cerrar-exportar>Cancelar</button>
     </div>
   </form>

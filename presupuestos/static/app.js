@@ -151,7 +151,11 @@
     var vacio = seleccion && marcadas === 0;
     if (ayuda) ayuda.hidden = !vacio;
     var boton = document.getElementById("exportar-descargar");
-    if (boton) boton.disabled = vacio;
+    if (boton) {
+      boton.disabled = vacio;
+      var archivos = (seleccion ? marcadas : parseInt(form.getAttribute("data-exportables"), 10)) + 1;
+      boton.textContent = "Descargar .zip (" + archivos + (archivos === 1 ? " archivo)" : " archivos)");
+    }
   }
 
   function restablecerExportar() {
