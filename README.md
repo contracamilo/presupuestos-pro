@@ -1,5 +1,7 @@
 # PresupuestosPro
 
+[![Tests](https://github.com/contracamilo/presupuestos-pro/actions/workflows/tests.yml/badge.svg)](https://github.com/contracamilo/presupuestos-pro/actions/workflows/tests.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small, self-hosted web app that lets freelancers (*autónomos*) in Spain create professional quotes (*presupuestos*) and download them as PDF — with the right VAT, withholding tax and legal wording for each type of client.
 
 The user interface and the generated PDFs are in **Spanish (Spain)**; amounts use the Spanish format (`1.234,56 €`). This README is in English for a wider audience.
@@ -142,4 +144,4 @@ Each spec folder contains the plan, research decisions, data model, contracts, a
 
 ## License
 
-No license has been chosen for the application code yet. The bundled Inter font is distributed under the [SIL Open Font License 1.1](presupuestos/static/fuentes/OFL.txt).
+The application code is released under the [MIT License](LICENSE). The bundled Inter font is distributed under the [SIL Open Font License 1.1](presupuestos/static/fuentes/OFL.txt).

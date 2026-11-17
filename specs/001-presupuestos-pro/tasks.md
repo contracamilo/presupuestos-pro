@@ -365,7 +365,8 @@ Proyecto Python único en la raíz del repositorio: `presupuestos/` (aplicación
 
 **Purpose**: revisión transversal antes de dar la entrega por terminada
 
-- [ ] T063 [P] Revisar todas las plantillas de `presupuestos/templates/` a 360 px, en tableta y en ordenador: sin desplazamiento horizontal y todas las funciones usables (FR-031, SC-009). Ajustar `presupuestos/static/estilos.css`
+- [X] T063 [P] Revisar todas las plantillas de `presupuestos/templates/` a 360 px, en tableta y en ordenador: sin desplazamiento horizontal y todas las funciones usables (FR-031, SC-009). Ajustar `presupuestos/static/estilos.css`
+  - *Evidencia (2026-11-15, durante la 003)*: las 12 pantallas medidas en Chrome a 320, 360, 800 y 1280 px sin desplazamiento horizontal, un único `h1`, controles ≥ 44 px y todas las acciones disponibles (ver la verificación de T019 y T034 en `specs/003-rediseno-visual/tasks.md`).
 - [X] T064 [P] Revisar todos los textos visibles de `presupuestos/templates/`, `presupuestos/rutas/` y `presupuestos/__main__.py`: español de España, importes con `euros` y fechas con `fecha` (FR-030)
 - [X] T065 [P] Comprobar la seguridad en el repositorio:
   - ninguna URL externa en `presupuestos/templates/` ni en `presupuestos/static/`;
