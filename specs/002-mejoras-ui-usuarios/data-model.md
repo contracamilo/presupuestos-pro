@@ -77,4 +77,20 @@ Ningún otro dato cambia: clientes, presupuestos, líneas, numeración y cuentas
 
 ## Exportación
 
-El archivo de exportación ([archivo-exportacion.md de la 001](../001-presupuestos-pro/contracts/archivo-exportacion.md)) añade el campo `tipo_documento` a cada cliente. Ver [contracts/cambios-rutas-y-pantallas.md](./contracts/cambios-rutas-y-pantallas.md).
+El archivo de exportación ([archivo-exportacion.md de la 001](../001-presupuestos-pro/contracts/archivo-exportacion.md)) añade el campo `tipo_documento` a cada cliente. Ver [contracts/cambios-rutas-y-pantallas.md](./contracts/cambios-rutas-y-pantallas.md). *(Nota: la spec 004 sustituyó después esta exportación en JSON por el .zip de PDF.)*
+
+---
+
+## Ampliación 2026-11-17: preferencia de tema (FR-121, R12)
+
+**No cambia la base de datos**: ni tablas, ni columnas, ni `user_version` (sigue en 2). La preferencia vive solo en el navegador.
+
+| Entidad | Dónde | Valores | Por defecto | Notas |
+|---|---|---|---|---|
+| Preferencia de tema | Cookie `tema` del navegador (por dispositivo) | `claro` \| `oscuro` \| `sistema` | `sistema` (sin cookie o valor desconocido) | 400 días; la escribe solo `POST /tema`. Detalle en [contracts/tema.md](./contracts/tema.md#cookie-tema-fr-121-fr-122) |
+
+Reglas:
+- **Tema calculado** de cada página = valor de la cookie si hay sesión y es válido; si no, `sistema` (FR-122, FR-124).
+- **Prioridad** (FR-124): `claro` u `oscuro` mandan sobre la preferencia del dispositivo; `sistema` la sigue.
+- No forma parte de presupuestos, clientes, catálogo, perfil, ajustes ni cuentas; no aparece en copias de seguridad ni en el .zip de la 004.
+- Cerrar sesión no la borra; borrar los datos del navegador o usar una ventana privada sí (vuelve a `sistema`).

@@ -99,4 +99,88 @@ El stack, las convenciones y la estructura son los de [specs/001-presupuestos-pr
 
 ---
 
+# Ampliación 2026-11-17: modo oscuro (US7, FR-117 a FR-130)
+
+**Fecha**: 2026-11-17. Decisiones R12–R18. Ninguna añade dependencias ni cambia el esquema de la base de datos.
+
+## Hallazgos sobre el código actual (punto de partida de la ampliación)
+
+- Todos los colores están en `static/tokens.css` (`:root`, `color-scheme: light`); `estilos.css` y `pdf.html` solo usan `var(--…)`, y `tests/test_paleta.py` lo comprueba junto con 26 pares de contraste (FR-202, FR-212 de la 003).
+- `base.html` declara `<meta name="color-scheme" content="light">`.
+- El PDF incluye `tokens.css` leído por `pdf.estilos_comunes()`; no incluye ningún otro archivo CSS.
+- La CSP es `script-src 'self'; style-src 'self'`: no se puede poner un `<script>` en el `<head>` que fije el tema antes de pintar, ni estilos en línea.
+- Las páginas completas se pintan con `base.html` desde `pagina()` o directamente con `TemplateResponse`; en ambos casos la plantilla recibe `request` (y sus cookies).
+- La cookie de sesión se crea en `rutas/sesion.py` con `secure` según `COOKIE_SEGURA`.
+- La vista previa del logo (`.logo-previa`, Perfil) no tiene fondo: un logo negro transparente desaparecería sobre fondo oscuro.
+
+## R12. Dónde se recuerda el tema — FR-121, FR-122, FR-124
+
+- **Decisión**: cookie `tema` en el navegador con valor `claro`, `oscuro` o `sistema`; `Path=/`, `SameSite=Lax`, `HttpOnly`, `Secure` según `COOKIE_SEGURA` (como la de sesión), duración 400 días (máximo que admiten los navegadores). La pone el servidor en `POST /tema` (R15). Sin cookie o con un valor desconocido → `sistema`. Las páginas sin sesión ignoran la cookie y usan siempre `sistema` (FR-124).
+- **Motivo**: la sesión de aclaraciones fijó «por dispositivo». Una cookie llega al servidor en cada petición, así que el servidor puede pintar la página ya con el tema correcto (R14, sin destello). No toca la base de datos ni `user_version`.
+- **Alternativas descartadas**: `localStorage` (el servidor no lo ve: obligaría a fijar el tema con JS antes de pintar, imposible sin script en línea por la CSP, y habría destello); columna en `usuarios` (sería «por usuario», descartado en la aclaración, y exigiría `user_version` 3); cookie escrita desde `app.js` con `document.cookie` (no funciona sin JS, FR-120).
+
+## R13. Paleta oscura en un archivo aparte — FR-125, FR-128, FR-130
+
+- **Decisión**: nuevo `static/tokens-oscuro.css` con un único bloque `:root { color-scheme: dark; … }` que redefine **todas** las variables de color de `tokens.css` (mismos nombres, valores oscuros; ver [contracts/tema.md](./contracts/tema.md#paleta-oscura)). No contiene tamaños, tipografía ni separaciones. `tokens.css` sigue siendo la paleta clara y el lugar de todo lo demás. Se añade un token nuevo `--color-fondo-logo: #ffffff` solo en `tokens.css` (no se redefine en oscuro) para la vista previa del logo (R17).
+- **Motivo**:
+  - Una sola definición de la paleta oscura, sin duplicar el bloque para «Oscuro» y para «Como el sistema» (R14 decide cuándo se aplica).
+  - El PDF solo lee `tokens.css` (`pdf.estilos_comunes()`), así que **nunca** puede salir en oscuro (FR-130) sin escribir código para impedirlo.
+  - `estilos.css` no cambia de reglas: sigue usando las mismas variables.
+- **Alternativas descartadas**:
+  - Función CSS `light-dark()` en cada token: una sola línea por color, pero el generador de PDF puede no entenderla (se quedaría sin colores) y `test_paleta.py` dejaría de poder leer los valores. Riesgo sin beneficio.
+  - Bloques `:root[data-tema="oscuro"]` y `@media (prefers-color-scheme: dark) { :root[data-tema="sistema"] }` dentro de `tokens.css`: duplica la paleta oscura y la mete en el CSS que también lee el PDF.
+
+## R14. Aplicar el tema sin destello y siguiendo al sistema — FR-118, FR-123, FR-126
+
+- **Decisión**: `base.html` pinta siempre, después de `tokens.css` y antes de `estilos.css`, `<link id="tokens-oscuro" rel="stylesheet" href="/static/tokens-oscuro.css" media="…">` y `<meta name="color-scheme" content="…">`, con valores según el tema que calcula el servidor (función `tema_actual(request)` en `rutas/__init__.py`, disponible en las plantillas):
+
+  | Tema | `media` del enlace | `color-scheme` (meta) |
+  |---|---|---|
+  | `claro` | `not all` (no se aplica) | `light` |
+  | `oscuro` | `all` | `dark` |
+  | `sistema` | `(prefers-color-scheme: dark)` | `light dark` |
+
+- **Motivo**:
+  - El HTML ya llega con el tema correcto: no hay destello (FR-126) y no hace falta JS para pintar.
+  - Con `sistema`, es el propio navegador quien aplica o retira la hoja cuando el dispositivo cambia de modo, también con la app abierta (FR-123), sin código.
+  - `color-scheme` hace que calendarios, desplegables, casillas y barras de desplazamiento del navegador se pinten en oscuro (FR-125).
+  - `estilos.css` se carga después, así que sus reglas usan ya los valores oscuros.
+- **Alternativas descartadas**: atributo `data-tema` en `<html>` con selectores en CSS (necesita la duplicación descartada en R13); cambiar el tema solo con JS tras cargar (destello y no funciona sin JS).
+
+## R15. Selector «Tema» y cambio inmediato — FR-117 a FR-120
+
+- **Decisión**:
+  - En `base.html`, al final del grupo «Configuración» del menú lateral y antes de «Salir»: `<form class="form-tema" method="post" action="/tema">` con un `<fieldset>` cuyo `<legend>` es «Tema» y tres botones de opción (`name="tema"`: Claro, Oscuro, Como el sistema), el actual marcado, un campo oculto `volver` con la ruta actual y un botón «Aplicar».
+  - **Sin JS**: se elige y se pulsa «Aplicar» → `POST /tema` pone la cookie y responde 303 a `volver` (FR-120). Se pierde lo no guardado, como en cualquier recarga (FR-120 lo acepta de forma expresa).
+  - **Con JS** (`app.js`): oculta «Aplicar»; al cambiar la opción, cambia en el momento el `media` del enlace `#tokens-oscuro` y el contenido del `meta` según la tabla de R14 (FR-118, sin recargar y sin tocar el resto de la página) y envía el formulario con `fetch` (`POST /tema` con la cabecera `X-Tema-Fetch: 1`, respuesta 204) para guardar la cookie. Si el envío falla, muestra el aviso existente «No se ha podido guardar. Comprueba tu conexión.»; el tema se queda aplicado en la página.
+  - `POST /tema` exige sesión (como el resto de la app), pasa por la comprobación de origen (D9), rechaza valores desconocidos (422) y solo redirige a `volver` si es una ruta interna (empieza por `/` y no por `//`) **que se pueda abrir con GET**, comprobándolo contra las rutas registradas en la app (`APIRoute` con `GET` cuyo `path_regex` coincide con la ruta sin la consulta); si no, `/`. Así, si la pantalla actual es la respuesta de un envío con errores (p. ej. `POST /mi-cuenta/contrasena` con 422, cuya dirección no admite GET), sin JS se vuelve al historial en lugar de dar 405 (FR-120).
+  - Páginas de error sin comprobación de sesión (p. ej. 404 de una dirección inexistente): `request.state.usuario` no existe, así que `tema_actual` devuelve `sistema`, igual que esas páginas no muestran el menú (caso límite de la spec).
+- **Motivo**:
+  - Botones de opción dentro de `<fieldset>`/`<legend>`: el lector de pantalla anuncia «Tema», las tres opciones y la marcada, y se manejan con Tab y flechas sin código (FR-119).
+  - El cambio con `fetch` no es una petición HTMX: no cuenta como guardado pendiente (R3) y no interfiere con el guardado automático (caso límite).
+- **Alternativas descartadas**: interruptor de dos estados (no permite volver a «Como el sistema», Supuestos de la spec); `<select>` (dos interacciones en vez de una, SC-108); llevarlo a «Mi cuenta» (más escondido; la spec lo pone en el menú).
+
+## R16. Contrastes de la paleta oscura — FR-127, SC-110
+
+- **Decisión**: la paleta oscura (valores en [contracts/tema.md](./contracts/tema.md#paleta-oscura)) se elige para cumplir **los mismos 26 pares** de `contracts/sistema-visual.md` de la 003. Comprobados al diseñarla: todos superan 5:1 (el más justo, `--color-borde-control` sobre `--color-fondo`, 5,02:1 con mínimo 3:1). Se comprueba además `--color-borde-control` sobre `--color-fondo-2` (4,50:1, mínimo 3:1), porque en oscuro el menú lateral usa ese fondo. Criterios:
+  - Fondos casi negros azulados (`#14191f`, `#1c232b`), texto casi blanco (`#e6e9ee`), no blanco puro, para que deslumbre menos.
+  - Marca azul aclarada (`#7fb2e5`): el azul claro `#1f4e79` no llega a 4,5:1 sobre fondo oscuro (supuesto de la spec). En los botones de marca y de error el texto pasa a ser oscuro (`--color-sobre-marca: #0d1620`).
+  - Verde, ámbar, rojo y azul conservan su significado (FR-127). Las etiquetas de estado siguen distinguiéndose por icono y forma (FR-210 de la 003), sin cambios en `estilos.css`.
+- `tests/test_paleta.py` lee las dos hojas y comprueba los pares en ambos temas, que `tokens-oscuro.css` redefine todos los colores de `tokens.css` salvo `--color-fondo-logo` (para que no quede ninguna zona con colores del claro, SC-109) y que no contiene tamaños ni otros tokens.
+
+## R17. Vista previa del logo legible — FR-129
+
+- **Decisión**: `.logo-previa` gana `background: var(--color-fondo-logo)`, un poco de relleno y el radio pequeño. `--color-fondo-logo` vale blanco en los dos temas (R13), así que el logo siempre se ve como en el PDF.
+- **Motivo**: un logo negro con fondo transparente desaparece sobre fondo oscuro. Mostrarlo sobre blanco es además fiel a cómo saldrá en el PDF.
+- **Alternativas descartadas**: invertir o filtrar el logo en oscuro (cambiaría los colores de la marca del autónomo).
+
+## R18. Qué no cambia
+
+- El PDF (`pdf.html`, `pdf.py`): no se toca (FR-130).
+- La base de datos, `schema.sql`, `user_version` (sigue en 2), las copias de seguridad y la exportación .zip de la 004: el tema no se guarda en el servidor.
+- Las reglas de `estilos.css`, salvo la vista previa del logo (R17), los estilos del selector «Tema» en el menú y ocultar «Aplicar» con JS.
+- Los textos de las pantallas, salvo los del selector («Tema», «Claro», «Oscuro», «Como el sistema», «Aplicar»).
+
+---
+
 No queda ningún «NEEDS CLARIFICATION».

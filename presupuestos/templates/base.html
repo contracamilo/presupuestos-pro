@@ -1,12 +1,16 @@
-<!doctype html>
+{% set tema = tema_actual(request) %}<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "422", "swap": true}, {"code": "409", "swap": true}, {"code": "[45]..", "swap": false, "error": true}]}'>
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="{{ APARIENCIA[tema][1] }}">
   <title>{% block titulo %}PresupuestosPro{% endblock %} · PresupuestosPro</title>
   <link rel="stylesheet" href="/static/tokens.css">
+  {# Paleta oscura (spec 002, R14). El navegador aplica la hoja según `media`: «not all» (Claro, nunca),
+     «all» (Oscuro, siempre) o «(prefers-color-scheme: dark)» (Como el sistema: la activa y desactiva
+     solo cuando cambia el dispositivo). Va antes de estilos.css para que sus reglas usen ya esos colores. #}
+  <link id="tokens-oscuro" rel="stylesheet" href="/static/tokens-oscuro.css" media="{{ APARIENCIA[tema][0] }}">
   <link rel="stylesheet" href="/static/estilos.css">
   <script src="/static/htmx.min.js" defer></script>
   <script src="/static/app.js" defer></script>
@@ -43,6 +47,18 @@
       {% if usuario.tipo == 'titular' %}<li>{{ enlace('/usuarios', 'Usuarios', ('/usuarios',)) }}</li>{% endif %}
       <li>{{ enlace('/mi-cuenta', 'Mi cuenta', ('/mi-cuenta',)) }}</li>
     </ul>
+    {# Selector de tema (spec 002, FR-117 a FR-120). Con JS cambia al momento y se guarda con fetch;
+       sin JS, «Aplicar» guarda y recarga la misma pantalla (`volver`). #}
+    <form class="form-tema" method="post" action="/tema">
+      <fieldset>
+        <legend class="grupo-menu">Tema</legend>
+        {% for valor, texto in (('claro', 'Claro'), ('oscuro', 'Oscuro'), ('sistema', 'Como el sistema')) %}
+        <label class="opcion-tema"><input type="radio" name="tema" value="{{ valor }}"{% if tema == valor %} checked{% endif %}> {{ texto }}</label>
+        {% endfor %}
+        <input type="hidden" name="volver" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+        <button type="submit" class="boton secundario aplicar-tema">Aplicar</button>
+      </fieldset>
+    </form>
     <form method="post" action="/salir" class="salir">
       <button type="submit" class="boton secundario">Salir</button>
     </form>

@@ -53,6 +53,8 @@
   --color-aviso-fondo: #fff4d6;
   --color-error: #b3261e;
   --color-error-fondo: #fbe9e7;
+  /* Fondo de la vista previa del logo: blanco en los dos temas, como en el PDF (FR-129). No se redefine en tokens-oscuro.css. */
+  --color-fondo-logo: #ffffff;
 
   /* Estados del presupuesto (contracts/estados.md) */
   --estado-borrador-texto: #4d5866;

@@ -39,7 +39,7 @@
 
   <h3>Añadir línea</h3>
   {% if servicios %}
-  <form class="linea" hx-post="/presupuestos/{{ p.id }}/lineas" hx-target="#lineas" hx-swap="outerHTML">
+  <form class="linea linea-catalogo" hx-post="/presupuestos/{{ p.id }}/lineas" hx-target="#lineas" hx-swap="outerHTML">
     <div class="descripcion">
       <label for="nueva-servicio">Desde el catálogo</label>
       <select id="nueva-servicio" name="servicio_id">

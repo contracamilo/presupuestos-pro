@@ -123,6 +123,20 @@ body.menu-abierto .menu-lateral { transform: none; visibility: visible; transiti
 }
 .salir { margin: var(--esp-4) var(--esp-3) 0; }
 
+/* Selector de tema (spec 002, FR-117, FR-119): grupo de opciones nativo, al final de «Configuración». */
+.form-tema { margin: 0 var(--esp-3); }
+.form-tema fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.form-tema legend.grupo-menu { margin-left: 0; margin-right: 0; padding: 0; }
+.opcion-tema {
+  display: flex; align-items: center; gap: var(--esp-2);
+  min-height: 44px; margin: 0; /* área táctil (FR-214a de la 003) */
+  font-size: var(--texto-base); font-weight: var(--peso-normal);
+  color: var(--color-texto); cursor: pointer;
+}
+.opcion-tema input { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--color-marca); }
+.aplicar-tema { margin-top: var(--esp-2); }
+.form-tema [hidden] { display: none; } /* .boton fuerza display y anularía `hidden` */
+
 .menu-fondo { position: fixed; inset: 0; z-index: 20; background: var(--color-superposicion); }
 .menu-fondo[hidden] { display: none; }
 body.menu-abierto { overflow: hidden; }
@@ -293,6 +307,8 @@ a.fila:hover strong { text-decoration: underline; }
   .linea .botones { grid-column: auto; }
   .linea .botones .boton { white-space: nowrap; }
   #catalogo .linea { grid-template-columns: 2fr 2fr 1fr 1.2fr auto; }
+  /* «Añadir desde el catálogo»: solo tres controles; el botón ocupa su ancho natural y no se desborda. */
+  .linea.linea-catalogo { grid-template-columns: 3fr 1fr auto; }
 }
 
 /* Totales (FR-208): «Total» como cifra más destacada del bloque */
@@ -314,6 +330,8 @@ a.fila:hover strong { text-decoration: underline; }
 .logo-previa {
   display: block; width: auto; max-width: min(100%, 15rem); max-height: 6rem;
   margin: var(--esp-2) 0; object-fit: contain;
+  /* Blanco en los dos temas, como en el PDF: un logo oscuro transparente sigue viéndose (FR-129). */
+  background: var(--color-fondo-logo); padding: var(--esp-2); border-radius: var(--radio-sm);
 }
 
 .entrar { max-width: 24rem; margin: var(--esp-6) auto; }

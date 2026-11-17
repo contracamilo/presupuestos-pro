@@ -20,6 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [004] `hidden` no funciona en elementos con `.error` o `.mensaje` (fuerzan `display`): añadir `contenedor [hidden] { display: none; }` en `estilos.css`.
 - [004] Nombres de archivo para el usuario: `limpiar_nombre` (`dominio/nombre_archivo.py`) conserva tildes y «ñ»; `nombre_pdf` (descarga individual, sin tildes) no se toca.
 - [004] No hay exportación de datos del negocio (JSON); la única copia de seguridad es `python -m presupuestos copia`. Exportar/importar datos está en `specs/propuestas.md` (P6).
+- [002] Paleta oscura en `static/tokens-oscuro.css` (solo colores, mismos nombres que `tokens.css`). Todo color nuevo se añade a las dos hojas y, si es un par texto/fondo, a `PARES` de `tests/test_paleta.py`. Si un color debe ser igual en los dos temas (p. ej. `--color-fondo-logo`), se define solo en `tokens.css`.
+- [002] El tema lo calcula el servidor con `tema_actual(request)` (cookie `tema` por dispositivo, sin BD; las páginas sin sesión siguen siempre al sistema). `base.html` lo aplica con el `media` de `<link id="tokens-oscuro">` y el `<meta name="color-scheme">` (tabla `APARIENCIA`, repetida en `app.js`). Sin destello y sin JS para pintar.
+- [002] El PDF solo lee `tokens.css` (`pdf.estilos_comunes()`), así que sale siempre en claro: no enlazar `tokens-oscuro.css` desde `pdf.html`.
+- [002] Para redirigir a un `volver` del usuario, solo se aceptan rutas internas que atienden GET (`_destino` en `rutas/sesion.py`, con `route.matches()`). En esta versión de FastAPI, `app.routes` envuelve los routers incluidos (`_IncludedRouter`): no se puede filtrar con `isinstance(r, APIRoute)`.
 
 ## Arranque y pruebas en local
 ```bash
