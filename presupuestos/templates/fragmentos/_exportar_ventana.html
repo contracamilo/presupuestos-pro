@@ -1,3 +1,4 @@
+{% from "fragmentos/_estado.html" import etiqueta_estado %}
 {# Ventana «Exportar» del historial (spec 004, contracts/rutas-http.md). Sin JS ni estilos en línea (CSP). #}
 <dialog id="ventana-exportar" aria-labelledby="exportar-titulo">
   <h2 id="exportar-titulo">Exportar</h2>
@@ -14,7 +15,31 @@
         <input type="radio" name="modo" value="todo" id="modo-todo" checked>
         Todo
       </label>
+      <label class="casilla" for="modo-seleccion">
+        <input type="radio" name="modo" value="seleccion" id="modo-seleccion"{% if resumen.exportables == 0 %} disabled{% endif %}>
+        Seleccionar qué exportar
+      </label>
+      {% if resumen.exportables == 0 %}<p class="suave">Aún no hay presupuestos descargados</p>{% endif %}
     </fieldset>
+    {% if resumen.exportables > 0 %}
+    <fieldset id="seleccion" hidden>
+      <legend>Presupuestos que se exportarán</legend>
+      <label class="casilla" for="marcar-todos"><input type="checkbox" id="marcar-todos"> Marcar todos</label>
+      <p id="recuento-marcados" aria-live="polite">0 marcados</p>
+      <ul class="lista">
+        {% for p in exportables %}
+        <li>
+          <label class="casilla">
+            <input type="checkbox" name="ids" value="{{ p.id }}" disabled>
+            <span><strong>{{ p.numero }}</strong> {{ etiqueta_estado(p.estado) }} · {{ p.cliente_nombre }}</span>
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <p id="aviso-parcial" class="mensaje aviso" hidden>Esta copia solo incluye los presupuestos marcados; no sirve como copia de seguridad completa.</p>
+    <p id="ayuda-marcar" class="suave" hidden>Marca al menos un presupuesto.</p>
+    {% endif %}
     <p id="exportar-error" class="error" role="alert" hidden></p>
     <div class="acciones">
       <button type="submit" class="boton" id="exportar-descargar">Descargar .zip</button>

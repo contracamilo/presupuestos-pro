@@ -119,6 +119,61 @@
       });
   });
 
+  // Selección de presupuestos (US1b): las casillas solo se envían con «Seleccionar» (si no, van desactivadas).
+  function casillasIds() {
+    return document.querySelectorAll("#form-exportar input[name=ids]");
+  }
+
+  function modoExportar() {
+    var marcado = document.querySelector("#form-exportar input[name=modo]:checked");
+    return marcado ? marcado.value : "todo";
+  }
+
+  function actualizarExportar() {
+    var form = document.getElementById("form-exportar");
+    if (!form) return;
+    var seleccion = modoExportar() === "seleccion";
+    var casillas = casillasIds();
+    var marcadas = 0;
+    Array.prototype.forEach.call(casillas, function (c) {
+      c.disabled = !seleccion;
+      if (c.checked) marcadas += 1;
+    });
+    var contenedor = document.getElementById("seleccion");
+    var aviso = document.getElementById("aviso-parcial");
+    var ayuda = document.getElementById("ayuda-marcar");
+    if (contenedor) contenedor.hidden = !seleccion;
+    if (aviso) aviso.hidden = !seleccion;
+    var recuento = document.getElementById("recuento-marcados");
+    if (recuento) recuento.textContent = marcadas + (marcadas === 1 ? " marcado" : " marcados");
+    var todos = document.getElementById("marcar-todos");
+    if (todos) todos.checked = casillas.length > 0 && marcadas === casillas.length;
+    var vacio = seleccion && marcadas === 0;
+    if (ayuda) ayuda.hidden = !vacio;
+    var boton = document.getElementById("exportar-descargar");
+    if (boton) boton.disabled = vacio;
+  }
+
+  function restablecerExportar() {
+    var form = document.getElementById("form-exportar");
+    if (!form) return;
+    form.reset();
+    var error = document.getElementById("exportar-error");
+    if (error) error.hidden = true;
+    actualizarExportar();
+  }
+
+  document.addEventListener("change", function (e) {
+    if (!e.target.closest || !e.target.closest("#form-exportar")) return;
+    if (e.target.id === "marcar-todos") {
+      Array.prototype.forEach.call(casillasIds(), function (c) { c.checked = e.target.checked; });
+    }
+    actualizarExportar();
+  });
+  document.addEventListener("close", function (e) {
+    if (e.target && e.target.id === "ventana-exportar") restablecerExportar();
+  }, true);
+
   // ------------------------------------------------------------ no salir con guardados pendientes (R3)
   // En la pantalla de presupuesto, «Volver al historial» y los enlaces del menú esperan a que terminen
   // los guardados en curso. Si alguno falla (sin conexión, error del servidor o dato no válido), no se sale.

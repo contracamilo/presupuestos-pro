@@ -236,3 +236,18 @@ def test_todo_ignora_los_ids(titular, conn, perfil, pdf_falso):
     r = titular.post("/exportar", data={"modo": "todo", "ids": [str(ids[0])]})
     z = abrir_zip(r)
     assert "copia" in r.headers["Content-Disposition"] and len([n for n in z.namelist() if n.endswith(".pdf")]) == 3
+
+
+def test_ventana_ofrece_seleccion(titular, conn, perfil):
+    crear(conn, "PRE-2026-001", "Estudio García")
+    crear(conn, "PRE-2026-002", "Borrador SL", descargado=False)
+    html = titular.get("/").text
+    assert 'id="modo-seleccion"' in html and 'id="marcar-todos"' in html
+    assert html.count('name="ids"') == 1 and "PRE-2026-001" in html
+    assert "no sirve como copia de seguridad completa" in html
+
+
+def test_ventana_sin_exportables_desactiva_seleccion(titular, conn, perfil):
+    crear(conn, "PRE-2026-001", descargado=False)
+    html = titular.get("/").text
+    assert "Aún no hay presupuestos descargados" in html and 'id="modo-seleccion" disabled' in html
