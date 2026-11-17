@@ -179,10 +179,8 @@
       if (c.checked) marcadas += 1;
     });
     var contenedor = document.getElementById("seleccion");
-    var aviso = document.getElementById("aviso-parcial");
     var ayuda = document.getElementById("ayuda-marcar");
     if (contenedor) contenedor.hidden = !seleccion;
-    if (aviso) aviso.hidden = !seleccion;
     var recuento = document.getElementById("recuento-marcados");
     if (recuento) recuento.textContent = marcadas + (marcadas === 1 ? " marcado" : " marcados");
     var todos = document.getElementById("marcar-todos");
@@ -192,7 +190,7 @@
     var boton = document.getElementById("exportar-descargar");
     if (boton) {
       boton.disabled = vacio;
-      var archivos = (seleccion ? marcadas : parseInt(form.getAttribute("data-exportables"), 10)) + 1;
+      var archivos = seleccion ? marcadas : parseInt(form.getAttribute("data-exportables"), 10);
       boton.textContent = "Descargar .zip (" + archivos + (archivos === 1 ? " archivo)" : " archivos)");
     }
   }

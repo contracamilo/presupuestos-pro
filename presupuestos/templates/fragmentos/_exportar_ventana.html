@@ -2,8 +2,9 @@
 {# Ventana «Exportar» del historial (spec 004, contracts/rutas-http.md). Sin JS ni estilos en línea (CSP). #}
 <dialog id="ventana-exportar" aria-labelledby="exportar-titulo">
   <h2 id="exportar-titulo">Exportar</h2>
-  {% if resumen.total == 0 %}
+  {% if resumen.exportables == 0 %}
   <p>No hay presupuestos que exportar</p>
+  <p class="suave">Solo se exportan los presupuestos que ya has descargado en PDF.</p>
   <form method="dialog" class="acciones">
     <button type="submit" class="boton secundario">Cerrar</button>
   </form>
@@ -16,21 +17,15 @@
         Todo
       </label>
       <div id="recuento-todo" class="suave" aria-live="polite">
-        {% if resumen.exportables == 0 %}
-        <p>No hay ningún presupuesto con PDF; la copia llevará solo el archivo de datos.</p>
-        {% else %}
-        <p>{{ "Se incluirá 1 PDF" if resumen.exportables == 1 else "Se incluirán " ~ resumen.exportables ~ " PDF" }} y el archivo de datos.
-        {% if resumen.solo_datos == 1 %}El presupuesto sin PDF solo irá en el archivo de datos.
-        {% elif resumen.solo_datos > 1 %}Los {{ resumen.solo_datos }} presupuestos sin PDF solo irán en el archivo de datos.{% endif %}</p>
-        {% endif %}
+        <p>{{ "Se incluirá 1 PDF." if resumen.exportables == 1 else "Se incluirán " ~ resumen.exportables ~ " PDF." }}
+        {% if resumen.sin_pdf == 1 %}El presupuesto sin PDF no se incluirá.
+        {% elif resumen.sin_pdf > 1 %}Los {{ resumen.sin_pdf }} presupuestos sin PDF no se incluirán.{% endif %}</p>
       </div>
       <label class="casilla" for="modo-seleccion">
-        <input type="radio" name="modo" value="seleccion" id="modo-seleccion"{% if resumen.exportables == 0 %} disabled{% endif %}>
+        <input type="radio" name="modo" value="seleccion" id="modo-seleccion">
         Seleccionar qué exportar
       </label>
-      {% if resumen.exportables == 0 %}<p class="suave">Aún no hay presupuestos descargados</p>{% endif %}
     </fieldset>
-    {% if resumen.exportables > 0 %}
     <fieldset id="seleccion" hidden>
       <legend>Presupuestos que se exportarán</legend>
       <label class="casilla" for="marcar-todos"><input type="checkbox" id="marcar-todos"> Marcar todos</label>
@@ -46,12 +41,10 @@
         {% endfor %}
       </ul>
     </fieldset>
-    <p id="aviso-parcial" class="mensaje aviso" hidden>Esta copia solo incluye los presupuestos marcados; no sirve como copia de seguridad completa.</p>
     <p id="ayuda-marcar" class="suave" hidden>Marca al menos un presupuesto.</p>
-    {% endif %}
     <p id="exportar-error" class="error" role="alert" hidden></p>
     <div class="acciones">
-      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip ({{ resumen.exportables + 1 }} {{ "archivo" if resumen.exportables == 0 else "archivos" }})</button>
+      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip ({{ resumen.exportables }} {{ "archivo" if resumen.exportables == 1 else "archivos" }})</button>
       <button type="button" class="boton secundario" id="exportar-cancelar" data-cerrar-exportar>Cancelar</button>
     </div>
   </form>

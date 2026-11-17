@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from presupuestos.rutas.exportar import datos_exportacion, presupuestos_exportables, resumen_exportacion
+from presupuestos.rutas.exportar import presupuestos_exportables, resumen_exportacion
 
 EMISOR = {"nombre": "Laura Gómez", "nif": "12345678Z", "direccion": "Calle Mayor 1", "email": "l@ejemplo.es",
           "telefono": "", "logo_id": None, "retencion_activa": False, "tipo_retencion": 15}
@@ -30,33 +30,6 @@ def crear(conn, numero, cliente="Acme SL", descargado=True, validez="2999-12-31"
     return pid
 
 
-# ---------------------------------------------------------------- T004: archivo de datos
-
-def test_datos_completos_conservan_claves_y_alcance(conn, perfil):
-    crear(conn, "PRE-2026-001")
-    d = datos_exportacion(conn)
-    assert d["alcance"] == "completo" and d["version"] == 2
-    assert set(d["datos"]) == {"perfil", "ajustes", "logos", "servicios", "clientes", "presupuestos", "contadores"}
-    assert d["datos"]["perfil"] is not None and d["datos"]["ajustes"] is not None
-
-
-def test_datos_de_seleccion(conn, perfil):
-    logo = conn.execute("INSERT INTO logos (tipo, datos, creado_en) VALUES ('image/png', x'89504e47', '2026-11-01')").lastrowid
-    otro_logo = conn.execute("INSERT INTO logos (tipo, datos, creado_en) VALUES ('image/png', x'89504e48', '2026-11-01')").lastrowid
-    conn.execute("INSERT INTO servicios (nombre, unidad, precio_cent) VALUES ('Hora', 'hora', 4500)")
-    conn.execute("INSERT INTO contadores (anio, ultimo) VALUES (2026, 2)")
-    a = crear(conn, "PRE-2026-001", "Acme SL", logo=logo)
-    crear(conn, "PRE-2026-002", "Otro SL", logo=otro_logo)
-    d = datos_exportacion(conn, [a])
-    assert d["alcance"] == "seleccion"
-    datos = d["datos"]
-    assert [p["id"] for p in datos["presupuestos"]] == [a]
-    assert [c["nombre"] for c in datos["clientes"]] == ["Acme SL"]
-    assert [l["id"] for l in datos["logos"]] == [logo]
-    assert datos["servicios"] == [] and datos["contadores"] == []
-    assert datos["perfil"] is None and datos["ajustes"] is None
-
-
 # ---------------------------------------------------------------- T005: exportables
 
 def test_exportables_y_resumen(conn, perfil):
@@ -68,7 +41,7 @@ def test_exportables_y_resumen(conn, perfil):
     assert [p["id"] for p in lista] == [caducado, valido]  # fecha de emisión igual: número descendente
     assert {p["id"]: p["estado"] for p in lista} == {valido: "enviado", caducado: "caducado"}
     assert lista[0]["numero"] == "PRE-2026-004" and lista[0]["cliente_nombre"] == "Acme SL"
-    assert resumen_exportacion(conn) == {"total": 4, "exportables": 2, "solo_datos": 2}
+    assert resumen_exportacion(conn) == {"total": 4, "exportables": 2, "sin_pdf": 2}
 
 
 # ---------------------------------------------------------------- T006: POST /exportar (modo=todo)
@@ -114,10 +87,7 @@ def test_exportar_todo(titular, conn, perfil, pdf_falso):
     assert f'filename="{base}.zip"' in r.headers["Content-Disposition"]
     z = abrir_zip(r)
     assert sorted(z.namelist()) == sorted([
-        f"{base}.json", "PRE-2026-001 - Estudio García.pdf", "PRE-2026-002 - Diseño Web S.L.pdf",
-        "PRE-2026-003 - Acme SL.pdf"])
-    datos = json.loads(z.read(f"{base}.json"))
-    assert datos["alcance"] == "completo" and len(datos["datos"]["presupuestos"]) == 4
+        "PRE-2026-001 - Estudio García.pdf", "PRE-2026-002 - Diseño Web S.L.pdf", "PRE-2026-003 - Acme SL.pdf"])
 
 
 def test_exportar_sin_sesion(cliente):
@@ -134,6 +104,12 @@ def test_asistente_puede_exportar(conn, cliente, perfil, pdf_falso):
 
 
 def test_exportar_sin_presupuestos(titular):
+    r = titular.post("/exportar", data={"modo": "todo"})
+    assert r.status_code == 422 and r.json() == {"error": "No hay presupuestos que exportar."}
+
+
+def test_exportar_solo_con_borradores(titular, conn, perfil, pdf_falso):
+    crear(conn, "PRE-2026-001", descargado=False)  # sin PDF no hay nada que exportar (no hay archivo de datos)
     r = titular.post("/exportar", data={"modo": "todo"})
     assert r.status_code == 422 and r.json() == {"error": "No hay presupuestos que exportar."}
 
@@ -157,24 +133,12 @@ def test_pdf_del_zip_igual_a_la_descarga_individual(titular, conn, perfil, pdf_f
     assert en_zip == individuales
 
 
-def test_el_json_no_lleva_cuentas(conn, cliente, perfil, pdf_falso):
-    crear_usuario(conn)
-    crear_usuario(conn, "asistente", "pablo@ejemplo.es")
-    entrar(cliente, "pablo@ejemplo.es")
-    logo = conn.execute("INSERT INTO logos (tipo, datos, creado_en) VALUES ('image/png', x'89504e47', '2026-11-01')").lastrowid
-    crear(conn, "PRE-2026-001", logo=logo)
-    z = abrir_zip(cliente.post("/exportar", data={"modo": "todo"}))
-    texto = z.read([n for n in z.namelist() if n.endswith(".json")][0]).decode()
-    assert "hash_contrasena" not in texto and "pablo@ejemplo.es" not in texto and "titular@ejemplo.es" not in texto
-    datos = json.loads(texto)["datos"]
-    assert "usuarios" not in datos
-    assert datos["logos"][0]["datos_base64"] == "iVBORw=="
-    assert datos["clientes"][0]["tipo_documento"] == "cif"
-
-
 def test_historial_incluye_la_ventana(titular, conn, perfil):
     assert "No hay presupuestos que exportar" in titular.get("/").text
-    crear(conn, "PRE-2026-001")
+    crear(conn, "PRE-2026-001", descargado=False)
+    assert "No hay presupuestos que exportar" in titular.get("/").text  # un borrador no tiene PDF
+    assert 'id="form-exportar"' not in titular.get("/").text
+    crear(conn, "PRE-2026-002")
     html = titular.get("/").text
     assert 'id="abrir-exportar"' in html and 'id="ventana-exportar"' in html
     assert 'data-exportables="1"' in html and "Descargar .zip" in html
@@ -198,14 +162,7 @@ def test_seleccion_parcial(titular, conn, perfil, pdf_falso):
     base = f"presupuestospro-seleccion-{fechas.hoy()}"
     assert f'filename="{base}.zip"' in r.headers["Content-Disposition"]
     z = abrir_zip(r)
-    assert sorted(z.namelist()) == sorted([f"{base}.json", "PRE-2026-001 - Estudio García.pdf",
-                                           "PRE-2026-003 - Acme SL.pdf"])
-    d = json.loads(z.read(f"{base}.json"))
-    assert d["alcance"] == "seleccion"
-    assert sorted(p["numero"] for p in d["datos"]["presupuestos"]) == ["PRE-2026-001", "PRE-2026-003"]
-    assert sorted(c["nombre"] for c in d["datos"]["clientes"]) == ["Acme SL", "Estudio García"]
-    assert d["datos"]["servicios"] == [] and d["datos"]["contadores"] == []
-    assert d["datos"]["perfil"] is None and d["datos"]["ajustes"] is None
+    assert sorted(z.namelist()) == sorted(["PRE-2026-001 - Estudio García.pdf", "PRE-2026-003 - Acme SL.pdf"])
 
 
 def test_seleccion_vacia(titular, conn, perfil, pdf_falso):
@@ -244,13 +201,7 @@ def test_ventana_ofrece_seleccion(titular, conn, perfil):
     html = titular.get("/").text
     assert 'id="modo-seleccion"' in html and 'id="marcar-todos"' in html
     assert html.count('name="ids"') == 1 and "PRE-2026-001" in html
-    assert "no sirve como copia de seguridad completa" in html
-
-
-def test_ventana_sin_exportables_desactiva_seleccion(titular, conn, perfil):
-    crear(conn, "PRE-2026-001", descargado=False)
-    html = titular.get("/").text
-    assert "Aún no hay presupuestos descargados" in html and 'id="modo-seleccion" disabled' in html
+    assert "copia de seguridad" not in html and "archivo de datos" not in html
 
 
 # ---------------------------------------------------------------- T019: solo lectura y coherencia
@@ -296,10 +247,9 @@ def test_lectura_de_un_solo_instante(titular, conn, perfil, pdf_falso, monkeypat
     monkeypatch.setattr(rutas_presupuestos, "html_pdf", html_con_escritura_ajena)
     z = abrir_zip(titular.post("/exportar", data={"modo": "todo"}))
     nombres = z.namelist()
-    json_ = json.loads(z.read([n for n in nombres if n.endswith(".json")][0]))
     assert hecho
-    assert "PRE-2026-099" not in str(json_) and not any("099" in n or "Borrador" in n for n in nombres)
-    assert len([n for n in nombres if n.endswith(".pdf")]) == 3
+    assert not any("099" in n or "Borrador" in n for n in nombres)  # lo creado o descargado a mitad no entra
+    assert len(nombres) == 3
 
 
 # ---------------------------------------------------------------- T020: recuento en la ventana
@@ -309,18 +259,17 @@ def test_recuento_de_la_ventana(titular, conn, perfil):
     crear(conn, "PRE-2026-002")
     crear(conn, "PRE-2026-003", descargado=False)
     html = " ".join(titular.get("/").text.split())
-    assert "Se incluirán 2 PDF y el archivo de datos." in html
-    assert "El presupuesto sin PDF solo irá en el archivo de datos." in html
-    assert "Descargar .zip (3 archivos)" in html
+    assert "Se incluirán 2 PDF." in html
+    assert "El presupuesto sin PDF no se incluirá." in html
+    assert "Descargar .zip (2 archivos)" in html
     crear(conn, "PRE-2026-004", descargado=False)
-    assert "Los 2 presupuestos sin PDF solo irán en el archivo de datos." in " ".join(titular.get("/").text.split())
+    assert "Los 2 presupuestos sin PDF no se incluirán." in " ".join(titular.get("/").text.split())
 
 
-def test_recuento_sin_exportables(titular, conn, perfil):
-    crear(conn, "PRE-2026-001", descargado=False)
+def test_recuento_con_un_solo_pdf(titular, conn, perfil):
+    crear(conn, "PRE-2026-001")
     html = " ".join(titular.get("/").text.split())
-    assert "No hay ningún presupuesto con PDF; la copia llevará solo el archivo de datos." in html
-    assert "Descargar .zip (1 archivo)" in html
+    assert "Se incluirá 1 PDF." in html and "Descargar .zip (1 archivo)" in html
 
 
 # ---------------------------------------------------------------- T023: errores y volumen
@@ -347,7 +296,7 @@ def test_volumen(titular, conn, perfil, pdf_falso, cantidad):
     z = abrir_zip(titular.post("/exportar", data={"modo": "todo"}))
     pdfs = [n for n in z.namelist() if n.endswith(".pdf")]
     assert len(pdfs) == cantidad and len(set(pdfs)) == cantidad
-    assert len(z.namelist()) == cantidad + 1
+    assert len(z.namelist()) == cantidad
 
 
 def test_estilos_respetan_hidden_en_la_ventana():

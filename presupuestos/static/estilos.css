@@ -353,5 +353,4 @@ dialog#ventana-exportar .lista { max-height: 40vh; overflow-y: auto; }
 dialog#ventana-exportar #seleccion { margin-top: var(--esp-3); }
 dialog#ventana-exportar .lista > li { padding: 0 var(--esp-2); }
 dialog#ventana-exportar .lista label.casilla { margin: 0; }
-dialog#ventana-exportar #aviso-parcial { margin: var(--esp-3) 0 0; }
 dialog#ventana-exportar [hidden] { display: none; } /* .mensaje y .error fuerzan display y anulaban `hidden` */
