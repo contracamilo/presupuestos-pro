@@ -117,8 +117,9 @@ Como autónomo con muchos presupuestos, quiero ver que la app está preparando l
 - **Selección con muchos presupuestos**: la lista de selección admite desplazamiento dentro de la ventana y «Marcar todos» marca todos los de la lista, no solo los visibles.
 - **Presupuesto que cambia mientras la ventana está abierta** (otra persona descarga un borrador): la selección se aplica sobre los presupuestos de la lista tal como se mostró; los demás no se incluyen.
 - **Nombre de cliente con caracteres conflictivos** («Diseño/Web S.L.», con `/`, `\`, `:`, `*`, `?`, `"`, `<`, `>`, `|`): el nombre del PDF se limpia (esos caracteres se sustituyen o eliminan) y el zip se abre sin errores.
-- **Nombre de cliente muy largo, vacío o anonimizado**: el nombre del PDF queda con una longitud razonable y, si no hay nombre utilizable, se usa un texto fijo («Sin cliente» o «Anonimizado»).
-- **Clientes archivados o anonimizados**: sus presupuestos se exportan igual.
+- **Nombre de cliente muy largo o que queda vacío tras la limpieza**: el nombre del PDF queda con una longitud razonable y, si no hay nombre utilizable, se usa el texto fijo «Sin cliente».
+- **Clientes archivados**: sus presupuestos se exportan igual.
+- **Presupuesto descargado cuyo cliente se anonimizó después**: la app ya no puede generar su PDF («El cliente de este presupuesto fue eliminado», 001 FR-023), así que tampoco hay PDF en el zip ni aparece en la lista de selección; con «Todo» sí va en el archivo de datos.
 - **Dos clientes con el mismo nombre**: no hay conflicto, porque el número del presupuesto es único y va en el nombre.
 - **Presupuesto creado o modificado mientras se prepara la copia**: la copia refleja un estado coherente de un único momento; no queda a medias.
 - **Se pulsa dos veces**: la segunda pulsación se ignora mientras la primera se prepara.
@@ -172,7 +173,7 @@ Como autónomo con muchos presupuestos, quiero ver que la app está preparando l
 
 ## Assumptions
 
-- «Descargado» significa que el presupuesto ya tiene su PDF generado y sus datos de emisor fijados. No se deduce de la etiqueta de estado: un presupuesto «Caducado» puede haberse descargado o no (la 003 da prioridad a «Caducado»), y solo entra en los PDF si se descargó.
+- Un presupuesto entra en los PDF del zip si ya está descargado **y** la app todavía puede generar su PDF con las mismas reglas que la descarga individual (p. ej. no si su cliente fue anonimizado). «Descargado» significa que el presupuesto tiene sus datos de emisor fijados. No se deduce de la etiqueta de estado: un presupuesto «Caducado» puede haberse descargado o no (la 003 da prioridad a «Caducado»), y solo entra en los PDF si se descargó.
 - Si hay presupuestos pero ninguno descargado, «Todo» genera el zip igualmente (el archivo de datos tiene valor por sí solo) y solo se avisa de que no hay PDF; «Seleccionar» queda desactivada porque no hay nada que marcar.
 - Los borradores solo salen con «Todo»: por decisión de la sesión de aclaraciones, la selección no los ofrece, y por tanto una selección nunca los incluye ni en PDF ni en el archivo de datos.
 - El archivo de datos de una selección conserva el mismo formato que el completo, pero con menos contenido; su restauración no es objetivo de esta spec.
