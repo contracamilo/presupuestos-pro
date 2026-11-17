@@ -166,7 +166,7 @@ Como titular o asistente, quiero elegir desde el menú lateral si la app se ve e
 5. **Given** el dispositivo en oscuro, **When** elijo «Claro» en la app, **Then** la app se ve en claro y no vuelve a oscuro al recargar.
 6. **Given** nunca he elegido tema, **When** entro en la app, **Then** el selector muestra «Como el sistema» y la app sigue la preferencia del dispositivo.
 7. **Given** la app en oscuro, **When** descargo el PDF de un presupuesto, **Then** el PDF tiene fondo blanco y es igual al que se descarga con la app en claro.
-8. **Given** la app en oscuro, **When** recorro todas las pantallas, el menú, un error de formulario, el aviso «No se ha podido guardar» y el historial con presupuestos Borrador, Enviado y Caducado, **Then** todo se lee bien, no queda ningún fondo blanco suelto ni texto oscuro sobre fondo oscuro, y las etiquetas de estado se distinguen entre sí.
+8. **Given** la app en oscuro, **When** recorro todas las pantallas, el menú, un error de formulario, el aviso «No se ha podido guardar» y el historial con presupuestos Borrador, Enviado y Caducado, **Then** todo se lee bien, no queda ningún fondo blanco suelto (salvo la vista previa del logo, que va sobre blanco a propósito, FR-129) ni texto oscuro sobre fondo oscuro, y las etiquetas de estado se distinguen entre sí.
 9. **Given** la app en oscuro, **When** abro el calendario de fecha de emisión y el selector de tipo de cliente, **Then** se muestran también en oscuro y legibles.
 10. **Given** solo uso teclado y lector de pantalla, **When** llego al selector «Tema» y cambio de opción, **Then** el foco es visible en ambos temas y se anuncia el nombre «Tema», las opciones y la opción elegida.
 11. **Given** tema «Oscuro» guardado, **When** recargo varias veces cualquier pantalla, **Then** en ningún momento aparece un destello del tema claro.
@@ -195,6 +195,8 @@ Como titular o asistente, quiero elegir desde el menú lateral si la app se ve e
 - **Titular y asistente en el mismo equipo y navegador**: comparten el tema elegido en ese equipo (FR-121).
 - **Mismo usuario en dos dispositivos**: cada dispositivo recuerda su propia elección; cambiarla en uno no afecta al otro.
 - **Navegador que borra sus datos o ventana privada**: se pierde la elección y vuelve a «Como el sistema» (FR-122).
+- **Sin conexión al cambiar de tema**: con JavaScript, el tema elegido se aplica igualmente a la pantalla abierta, pero no se puede recordar; aparece el aviso existente «No se ha podido guardar. Comprueba tu conexión.» y, al recargar con conexión, vuelve el tema que estaba guardado.
+- **Páginas de error que se muestran sin comprobar la sesión** (p. ej., una dirección que no existe): siguen la preferencia del sistema, igual que no muestran el menú (FR-124).
 - **Cambiar de tema durante un guardado automático**: el guardado termina con normalidad; el tema no interfiere con los datos.
 - **Cerrar sesión**: la pantalla de inicio de sesión sigue la preferencia del sistema (FR-124); al volver a entrar se aplica de nuevo la elección guardada en ese dispositivo.
 - **Modo de alto contraste forzado por el sistema** (p. ej., Windows): la app no lo impide; no se diseña una paleta específica para él.
@@ -241,7 +243,7 @@ Como titular o asistente, quiero elegir desde el menú lateral si la app se ve e
 - **FR-117**: Con sesión iniciada, el menú lateral DEBE incluir un selector «Tema» con tres opciones: «Claro», «Oscuro» y «Como el sistema», como última entrada del grupo «Configuración» (después de «Mi cuenta», con las entradas vigentes de FR-101) e inmediatamente antes de «Salir». En pantallas de menos de 1024 px está dentro del menú desplegable (FR-103).
 - **FR-118**: Al elegir una opción, el tema DEBE aplicarse a la pantalla actual de inmediato, sin recargar, sin perder lo escrito en formularios ni las líneas de un presupuesto en edición y sin interrumpir el guardado automático.
 - **FR-119**: El selector DEBE poder usarse solo con teclado y estar identificado para lectores de pantalla: nombre «Tema», sus tres opciones y cuál está activa.
-- **FR-120**: El selector DEBE funcionar aunque el JavaScript del navegador no se ejecute; en ese caso basta con que el cambio se vea tras recargar la página.
+- **FR-120**: El selector DEBE funcionar aunque el JavaScript del navegador no se ejecute; en ese caso basta con que el cambio se vea tras recargar la pantalla. Sin JavaScript, esa recarga pierde lo que no se haya guardado todavía, como cualquier recarga; la garantía de no perder nada de FR-118 aplica al cambio inmediato con JavaScript. Tras la recarga se vuelve a la misma pantalla; si esa pantalla es el resultado de un envío con errores (no se puede volver a abrir tal cual), se vuelve al historial.
 - **FR-121**: La elección DEBE recordarse al recargar, al cambiar de sección y al cerrar y volver a abrir el navegador. Se recuerda **por dispositivo**: cada navegador guarda su elección, compartida por quien use ese equipo; no se guarda en la cuenta del usuario ni cambia los datos almacenados de la herramienta.
 - **FR-122**: Sin elección previa, el tema DEBE ser «Como el sistema». Si el navegador no informa de ninguna preferencia, «Como el sistema» equivale a «Claro».
 - **FR-123**: Con «Como el sistema», la app DEBE seguir la preferencia del dispositivo y cambiar sola si esta cambia mientras la app está abierta.
@@ -273,7 +275,7 @@ Como titular o asistente, quiero elegir desde el menú lateral si la app se ve e
 - **SC-106**: Tras la actualización, el 100 % de los clientes, presupuestos e importes creados con v1 siguen presentes y con los mismos importes.
 - **SC-107**: Cada escenario de aceptación de esta spec puede comprobarse en la app siguiendo pasos escritos, sin leer código, incluida la creación del titular.
 - **SC-108**: Con el menú abierto, cambiar de tema lleva un solo toque o pulsación y menos de 5 segundos, sin pérdida de datos en el 100 % de los intentos.
-- **SC-109**: En un recorrido de todas las pantallas en oscuro a 360 px y a 1280 px, el 100 % de los textos, campos, botones, avisos y etiquetas de estado se leen con claridad y no queda ninguna zona con los colores del tema claro.
+- **SC-109**: En un recorrido de todas las pantallas en oscuro a 360 px y a 1280 px, el 100 % de los textos, campos, botones, avisos y etiquetas de estado se leen con claridad y no queda ninguna zona con los colores del tema claro, salvo la vista previa del logo sobre blanco (FR-129).
 - **SC-110**: El 100 % de las combinaciones de texto/fondo y de controles cumplen los contrastes de FR-212 de la spec 003 en ambos temas, medidos con cualquier comprobador de contraste.
 - **SC-111**: El 100 % de los PDF descargados con la app en oscuro son iguales a los descargados en claro.
 - **SC-112**: El tema elegido se mantiene en el 100 % de las recargas, cambios de sección y reaperturas del navegador, sin destello del tema contrario.

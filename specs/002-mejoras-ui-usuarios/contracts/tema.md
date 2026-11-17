@@ -30,7 +30,7 @@ Sobre [cambios-rutas-y-pantallas.md](./cambios-rutas-y-pantallas.md) y las regla
 
 | Método y ruta | Campos | Resultado |
 |---|---|---|
-| `POST /tema` **(nueva)** | `tema` (`claro` \| `oscuro` \| `sistema`), `volver` (opcional) | Pone la cookie `tema`. Petición de `app.js` (cabecera `X-Tema-Fetch: 1`, ver nota) → **204**. Formulario normal → **303** a `volver` si es una ruta interna (empieza por `/` y no por `//`), si no a `/`. Valor de `tema` desconocido → **422**. Sin sesión → como el resto (303 a `/entrar`). Origen ajeno → 403 (D9) |
+| `POST /tema` **(nueva)** | `tema` (`claro` \| `oscuro` \| `sistema`), `volver` (opcional) | Pone la cookie `tema`. Petición de `app.js` (cabecera `X-Tema-Fetch: 1`, ver nota) → **204**. Formulario normal → **303** a `volver` si es una ruta interna (empieza por `/` y no por `//`) que la app pueda abrir con GET; si no (dirección externa, vacía, o la de un envío con errores como `/mi-cuenta/contrasena`), a `/`. Valor de `tema` desconocido → **422**. Sin sesión → como el resto (303 a `/entrar`). Origen ajeno → 403 (D9) |
 
 Nota: `app.js` envía el formulario con la cabecera `X-Tema-Fetch: 1` para distinguirlo del envío sin JS; no es una petición HTMX y no cuenta como guardado pendiente (R3).
 
@@ -43,7 +43,7 @@ Nota: `app.js` envía el formulario con la cabecera `X-Tema-Fetch: 1` para disti
 | Ámbito | `Path=/`, `SameSite=Lax`, `HttpOnly`, `Secure` salvo con `COOKIE_SEGURA=0` |
 
 - No se guarda nada en la base de datos. Cerrar sesión no borra la cookie: al volver a entrar en ese dispositivo se aplica de nuevo.
-- Sin cookie, con un valor desconocido o en una página **sin sesión** → se trata como `sistema` (FR-122, FR-124).
+- Sin cookie, con un valor desconocido o en una página **sin sesión** → se trata como `sistema` (FR-122, FR-124). Cuenta como «sin sesión» toda página que se pinta sin comprobar la sesión, incluidas las de error de una dirección inexistente (caso límite de la spec).
 
 ## Cómo se pinta cada página (FR-123, FR-125, FR-126)
 

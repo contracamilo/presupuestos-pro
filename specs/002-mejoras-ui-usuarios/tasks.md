@@ -285,7 +285,7 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
 
 **Goal**: selector «Tema» (Claro / Oscuro / Como el sistema) en el menú lateral, cambio inmediato sin perder datos, elección recordada por dispositivo en la cookie `tema`, página pintada por el servidor con el tema correcto (sin destello), «Como el sistema» resuelto por el navegador, controles nativos en oscuro, vista previa del logo legible y PDF siempre en claro (FR-117 a FR-130).
 
-**Independent Test**: quickstart F1–F17.
+**Independent Test**: quickstart F1–F19.
 
 ### Tests for User Story 7 ⚠️
 
@@ -303,6 +303,8 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
   - `test_tema_con_fetch_devuelve_204_y_cookie`: con `titular`, `POST /tema` con `tema=oscuro` y cabecera `X-Tema-Fetch: 1` → 204; la cabecera `set-cookie` contiene `tema=oscuro`, `Max-Age=34560000`, `HttpOnly`, `Path=/` y `SameSite=lax` (sin `Secure`, porque `conftest.py` pone `COOKIE_SEGURA=0`).
   - `test_tema_sin_js_redirige_a_volver`: sin la cabecera, `volver=/clientes` → 303 con `Location: /clientes` y la cookie puesta; `volver=/?q=Acme` → `/?q=Acme`.
   - `test_tema_volver_externo_va_a_inicio`: `volver` = `//ejemplo.com`, `https://ejemplo.com/x`, `clientes` (sin barra) o vacío → 303 a `/`.
+  - `test_tema_volver_sin_get_va_a_inicio`: `volver=/mi-cuenta/contrasena` (solo admite POST) y `volver=/no-existe` → 303 a `/`; `volver=/presupuestos/1` (ruta con parámetro que admite GET) → 303 a `/presupuestos/1` (FR-120).
+  - `test_error_sin_sesion_sigue_al_sistema`: con `titular` y la cookie `tema=oscuro`, `GET /no-existe` → 404 con `media="(prefers-color-scheme: dark)"` (caso límite «Páginas de error que se muestran sin comprobar la sesión»).
   - `test_tema_valor_desconocido`: `tema=azul` → 422 y sin cookie `tema`.
   - `test_tema_origen_ajeno`: cabecera `Origin: https://otro.ejemplo` → 403 (D9).
   - `test_base_segun_cookie` (parametrizado): con `titular` y la cookie `tema` en el cliente, `GET /` contiene `<link id="tokens-oscuro" rel="stylesheet" href="/static/tokens-oscuro.css" media="M">` y `<meta name="color-scheme" content="C">` con: `claro` → `M="not all"`, `C="light"`; `oscuro` → `"all"`, `"dark"`; `sistema`, sin cookie y `tema=azul` → `"(prefers-color-scheme: dark)"`, `"light dark"`. El enlace aparece **después** de `/static/tokens.css` y **antes** de `/static/estilos.css` (orden de carga, R14).
@@ -326,7 +328,7 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
 - [ ] T051 [US7] En `presupuestos/rutas/sesion.py`, añadir `POST /tema` (sección con comentario «Tema (FR-117 a FR-122, research R12, R15)»):
   - Firma: `tema: str = Form("")`, `volver: str = Form("")`, dependencia `usuario_actual` (importar de `presupuestos.rutas`) para exigir sesión.
   - Si `tema not in TEMAS` → `HTTPException(422)` (sin cookie).
-  - Destino: `volver` si empieza por `/` y no por `//`; si no, `/` (evita redirigir a otro sitio).
+  - Destino (función `_destino(request, volver) -> str`): `volver` solo si empieza por `/`, no por `//`, **y** su ruta sin la consulta (`volver.split("?")[0]`) coincide con alguna `APIRoute` de `request.app.routes` que tenga `"GET"` en `methods` (`ruta.path_regex.match(...)`); en cualquier otro caso, `/`. Evita redirigir a otro sitio y evita el 405 cuando la pantalla actual es la respuesta de un POST con errores (p. ej. `/mi-cuenta/contrasena`) (FR-120, research R15).
   - Respuesta: si `request.headers.get("X-Tema-Fetch") == "1"` → `Response(status_code=204)`; si no → `RedirectResponse(destino, status_code=303)`.
   - Cookie en ambas respuestas con una función `_poner_cookie_tema(respuesta, tema)`: `set_cookie(COOKIE_TEMA, tema, max_age=34560000, httponly=True, samesite="lax", secure=os.environ.get("COOKIE_SEGURA", "1") == "1", path="/")` (400 días; misma regla `secure` que `_respuesta_con_sesion`).
   - No toca la base de datos. `POST /salir` **no** borra la cookie `tema` (data-model: cerrar sesión no la borra).
@@ -339,7 +341,7 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
 - [ ] T054 [US7] En `presupuestos/static/app.js`, nuevo bloque «tema (FR-117 a FR-120, research R15)» en el mismo estilo IIFE, sin HTMX:
   - Constante `APARIENCIA` con la misma tabla que `rutas/__init__.py` (`claro` → `["not all", "light"]`, `oscuro` → `["all", "dark"]`, `sistema` → `["(prefers-color-scheme: dark)", "light dark"]`).
   - `aplicarTema(valor)`: pone `media` en `#tokens-oscuro` y `content` en `meta[name=color-scheme]`.
-  - `guardarTema(form)`: `fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Tema-Fetch": "1" }, credentials: "same-origin" })`; si la respuesta no es `ok` o la promesa falla, `aviso(true)` (reutilizar la función existente); el tema queda aplicado en la página.
+  - `guardarTema(form)`: `fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Tema-Fetch": "1" }, credentials: "same-origin" })`; si la respuesta no es `ok` o la promesa falla, `aviso(true)` (reutilizar la función existente); el tema queda aplicado en la página (caso límite «Sin conexión al cambiar de tema»).
   - Evento `change` en `form.form-tema input[name=tema]` → `aplicarTema(valor)` y `guardarTema(form)` (FR-118: sin recargar; al no ser HTMX no cuenta en `pendientes` de R3 ni interrumpe guardados).
   - Evento `submit` de `form.form-tema` (Intro sobre un radio) → `preventDefault()` y lo mismo que `change`.
   - En `DOMContentLoaded`, poner `hidden = true` a `.aplicar-tema` (solo se ve sin JS, FR-120).
@@ -352,7 +354,7 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
 
 - [ ] T056 [US7] Con la app en «Oscuro» y luego en «Como el sistema» con el dispositivo en oscuro, recorrer a 360 px y 1280 px todas las pantallas con sesión (historial con Borrador, Enviado y Caducado, presupuesto con error de cantidad, clientes, cliente, catálogo, perfil con y sin logo, ajustes, usuarios, mi cuenta), el menú desplegable con su fondo, el aviso «No se ha podido guardar», la ventana «Exportar…» de la 004 (con y sin presupuestos exportables), el `hx-confirm` de «Quitar logo», los calendarios y los selectores nativos, y las pantallas sin sesión (con el dispositivo en oscuro). Corregir lo que no se lea **solo** en `presupuestos/static/estilos.css` con `var(--…)` o, si falta un color, añadiéndolo a la vez a `tokens.css` y `tokens-oscuro.css` (y a `PARES` de `tests/test_paleta.py` si es un par texto/fondo nuevo). Anotar en este archivo, bajo la tarea, cualquier ajuste hecho
 
-**Checkpoint**: `pytest tests/test_paleta.py tests/test_tema.py` en verde; quickstart F1–F16 en verde.
+**Checkpoint**: `pytest tests/test_paleta.py tests/test_tema.py` en verde; quickstart F1–F16, F18 y F19 en verde.
 
 ---
 

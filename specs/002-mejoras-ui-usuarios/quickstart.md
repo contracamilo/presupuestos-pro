@@ -133,6 +133,8 @@ Selector, ruta, cookie y paleta en [contracts/tema.md](./contracts/tema.md).
 | F14 | Cerrar sesión con «Oscuro» elegido y el dispositivo en claro | La pantalla de inicio de sesión se ve en claro y sin selector; al entrar de nuevo la app vuelve a oscuro (FR-124, caso límite «Cerrar sesión») |
 | F15 | Abrir la app en una ventana privada y entrar | Tema «Como el sistema» (caso límite «Navegador que borra sus datos o ventana privada») |
 | F16 | Con «Oscuro», desconectar la red (modo avión) y elegir «Claro» | La página cambia a claro y aparece «No se ha podido guardar. Comprueba tu conexión.»; al reconectar y recargar vuelve a oscuro ([tema.md](./contracts/tema.md#selector-tema-fr-117-a-fr-120)) |
+| F18 | Con JavaScript desactivado: en «Mi cuenta», cambiar la contraseña con una repetición distinta (aparece el error); después elegir «Claro» y pulsar «Aplicar» | Se abre el historial en claro, sin página de error (FR-120) |
+| F19 | Con «Oscuro» elegido y el dispositivo en claro, escribir en la barra una dirección que no existe (p. ej. `/no-existe`) | La página de error se ve en claro, sin menú (caso límite «Páginas de error que se muestran sin comprobar la sesión») |
 | F17 | **(Técnico)** `docker compose exec app pytest tests/test_paleta.py tests/test_tema.py` | Pasan: contrastes de los dos temas, paleta oscura completa, PDF sin hoja oscura, ruta `/tema` y cookie (SC-110) |
 
 ## 4. Comprobación de los criterios de éxito
