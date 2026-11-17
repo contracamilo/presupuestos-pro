@@ -76,7 +76,7 @@ def test_exportables_y_resumen(conn, perfil):
 import io
 import zipfile
 
-from presupuestos.dominio import fechas
+from presupuestos.dominio import estado, fechas
 from tests.conftest import crear_usuario, entrar
 
 
@@ -251,3 +251,52 @@ def test_ventana_sin_exportables_desactiva_seleccion(titular, conn, perfil):
     crear(conn, "PRE-2026-001", descargado=False)
     html = titular.get("/").text
     assert "Aún no hay presupuestos descargados" in html and 'id="modo-seleccion" disabled' in html
+
+
+# ---------------------------------------------------------------- T019: solo lectura y coherencia
+
+def _foto(conn):
+    return ([tuple(f) for f in conn.execute("SELECT * FROM presupuestos ORDER BY id")],
+            [tuple(f) for f in conn.execute("SELECT * FROM contadores ORDER BY anio")],
+            [tuple(f) for f in conn.execute("SELECT * FROM lineas ORDER BY id")])
+
+
+@pytest.mark.parametrize("datos", [{"modo": "todo"}, "seleccion"])
+def test_exportar_no_escribe_nada(titular, conn, perfil, pdf_falso, datos):
+    ids, borrador, _ = escenario_seleccion(conn)
+    conn.execute("INSERT INTO contadores (anio, ultimo) VALUES (?, 5)", (int(fechas.hoy()[:4]),))
+    if datos == "seleccion":
+        datos = {"modo": "seleccion", "ids": [str(ids[0])]}
+    antes = _foto(conn)
+    assert titular.post("/exportar", data=datos).status_code == 200
+    assert _foto(conn) == antes
+    fila = conn.execute("SELECT emisor_congelado FROM presupuestos WHERE id = ?", (borrador,)).fetchone()
+    assert fila[0] is None  # el borrador sigue sin fijar el emisor
+    assert estado.estado(fila[0], "2999-12-31", fechas.hoy()) == "borrador"
+    # El siguiente presupuesto recibe el número consecutivo esperado.
+    r = titular.post("/presupuestos")
+    nuevo = conn.execute("SELECT numero FROM presupuestos WHERE id = ?", (int(r.headers["location"].rsplit("/", 1)[1]),)).fetchone()[0]
+    assert nuevo == f"PRE-{fechas.hoy()[:4]}-006"  # el contador sembrado en 5 no se movió con la exportación
+
+
+def test_lectura_de_un_solo_instante(titular, conn, perfil, pdf_falso, monkeypatch):
+    ids, borrador, _ = escenario_seleccion(conn)
+    from presupuestos.rutas import presupuestos as rutas_presupuestos
+
+    original = rutas_presupuestos.html_pdf
+    hecho = []
+
+    def html_con_escritura_ajena(c, datos):
+        if not hecho:  # mientras se prepara el primer PDF, otra sesión cambia datos
+            hecho.append(1)
+            crear(conn, "PRE-2026-099", "Nuevo SL")
+            conn.execute("UPDATE presupuestos SET emisor_congelado = ? WHERE id = ?", (json.dumps(EMISOR), borrador))
+        return original(c, datos)
+
+    monkeypatch.setattr(rutas_presupuestos, "html_pdf", html_con_escritura_ajena)
+    z = abrir_zip(titular.post("/exportar", data={"modo": "todo"}))
+    nombres = z.namelist()
+    json_ = json.loads(z.read([n for n in nombres if n.endswith(".json")][0]))
+    assert hecho
+    assert "PRE-2026-099" not in str(json_) and not any("099" in n or "Borrador" in n for n in nombres)
+    assert len([n for n in nombres if n.endswith(".pdf")]) == 3
