@@ -259,3 +259,146 @@ Cada historia se verifica con su bloque de quickstart antes de pasar a la siguie
 - Cada tarea cita el requisito o la decisión que la justifica; nada fuera de la spec (principio III).
 - Hacer commit tras cada tarea o grupo lógico.
 - La única tarea que modifica datos existentes es T029 (añade una columna con valor por defecto); probarla con T024 antes de desplegar en una instalación real.
+
+---
+---
+
+# Ampliación 2026-11-17: modo oscuro conmutable (US7)
+
+**Rama**: `005-modo-oscuro` (la crea la extensión git de Spec Kit; la spec sigue en `specs/002-mejoras-ui-usuarios`).
+
+**Input**: [spec.md](./spec.md) US7, FR-117 a FR-130, SC-108 a SC-112 · [plan.md](./plan.md#ampliación-2026-11-17-modo-oscuro-us7-fr-117-a-fr-130) · [research.md R12–R18](./research.md#ampliación-2026-11-17-modo-oscuro-us7-fr-117-a-fr-130) · [data-model.md](./data-model.md#ampliación-2026-11-17-preferencia-de-tema-fr-121-r12) · [contracts/tema.md](./contracts/tema.md) · [quickstart.md §F](./quickstart.md#f-modo-oscuro-us7-ampliación-2026-11-17)
+
+**Tests**: misma política que arriba (D20). Se amplía `tests/test_paleta.py` (contrastes, regla existente de la 003) y se crea `tests/test_tema.py` porque `POST /tema` es una ruta con control de acceso, comprobación de origen y redirección (seguridad) y porque el tema que pinta el servidor decide si hay destello (FR-126) y si el PDF puede salir en oscuro (FR-130). El aspecto visual se verifica en la app con quickstart §F.
+
+**Restricciones de todas las tareas de la ampliación**: sin dependencias nuevas; sin JS ni estilos en línea (CSP); ningún color literal fuera de `tokens.css` y `tokens-oscuro.css` (`test_estilos_sin_colores_propios`); `pdf.py` y `pdf.html` **no se tocan**; la base de datos y `user_version` (2) **no cambian**; textos en español de España.
+
+---
+
+## Phase 10: Setup de la ampliación
+
+- [ ] T044 Ejecutar `.venv/bin/pytest` desde la raíz en la rama `005-modo-oscuro` y confirmar que toda la suite (001–004) pasa antes de empezar; si algo falla, parar y avisar
+
+---
+
+## Phase 11: User Story 7 - Elegir entre tema claro, oscuro o el del sistema (Priority: P2)
+
+**Goal**: selector «Tema» (Claro / Oscuro / Como el sistema) en el menú lateral, cambio inmediato sin perder datos, elección recordada por dispositivo en la cookie `tema`, página pintada por el servidor con el tema correcto (sin destello), «Como el sistema» resuelto por el navegador, controles nativos en oscuro, vista previa del logo legible y PDF siempre en claro (FR-117 a FR-130).
+
+**Independent Test**: quickstart F1–F17.
+
+### Tests for User Story 7 ⚠️
+
+> Escribirlos primero y comprobar que fallan.
+
+- [ ] T045 [P] [US7] Ampliar `tests/test_paleta.py` (research R16, [contracts/tema.md §Paleta oscura](./contracts/tema.md#paleta-oscura)):
+  - Añadir `TOKENS_OSCURO = RAIZ / "static" / "tokens-oscuro.css"` y hacer que `_colores(archivo=TOKENS)` reciba el archivo.
+  - Añadir a `PARES` el par `("--color-borde-control", "--color-fondo-2", 3)` (campos sobre el menú lateral).
+  - Parametrizar `test_contrastes_de_la_paleta` con `tema in ("claro", "oscuro")`: en claro, los colores de `tokens.css`; en oscuro, los de `tokens.css` actualizados con los de `tokens-oscuro.css` (`{**claro, **oscuro}`). El mensaje de fallo indica el tema.
+  - `test_paleta_oscura_completa`: el conjunto de variables de color de `tokens.css` (nombres que empiezan por `--color-` o `--estado-`, con valor `#rrggbb` o `rgba(...)`) **menos `--color-fondo-logo`** es igual al conjunto de variables definidas en `tokens-oscuro.css` (SC-109: ninguna zona queda con colores del claro).
+  - `test_paleta_oscura_solo_colores`: `tokens-oscuro.css` (sin comentarios) contiene `color-scheme: dark`, un único bloque `:root { … }` y todas sus variables empiezan por `--color-` o `--estado-` (FR-128: ni tamaños, ni tipografía, ni separaciones), y no redefine `--color-fondo-logo`.
+  - `test_pdf_sin_hoja_oscura`: `presupuestos.pdf.estilos_comunes()` no contiene `--color-fondo: #14191f` ni `color-scheme: dark`, y `templates/pdf.html` no menciona `tokens-oscuro` (FR-130).
+- [ ] T046 [P] [US7] Crear `tests/test_tema.py` (usa `cliente`, `conn`, `titular`, `crear_usuario` y `entrar` de `tests/conftest.py`; [contracts/tema.md §Ruta y §Cookie](./contracts/tema.md#ruta)):
+  - `test_tema_exige_sesion`: sin sesión, `POST /tema` con `tema=oscuro` → 303 a `/entrar` y sin cabecera `set-cookie` de `tema` (además lo cubre `test_toda_ruta_exige_sesion`, porque `/tema` no está en `PUBLICAS`).
+  - `test_tema_con_fetch_devuelve_204_y_cookie`: con `titular`, `POST /tema` con `tema=oscuro` y cabecera `X-Tema-Fetch: 1` → 204; la cabecera `set-cookie` contiene `tema=oscuro`, `Max-Age=34560000`, `HttpOnly`, `Path=/` y `SameSite=lax` (sin `Secure`, porque `conftest.py` pone `COOKIE_SEGURA=0`).
+  - `test_tema_sin_js_redirige_a_volver`: sin la cabecera, `volver=/clientes` → 303 con `Location: /clientes` y la cookie puesta; `volver=/?q=Acme` → `/?q=Acme`.
+  - `test_tema_volver_externo_va_a_inicio`: `volver` = `//ejemplo.com`, `https://ejemplo.com/x`, `clientes` (sin barra) o vacío → 303 a `/`.
+  - `test_tema_valor_desconocido`: `tema=azul` → 422 y sin cookie `tema`.
+  - `test_tema_origen_ajeno`: cabecera `Origin: https://otro.ejemplo` → 403 (D9).
+  - `test_base_segun_cookie` (parametrizado): con `titular` y la cookie `tema` en el cliente, `GET /` contiene `<link id="tokens-oscuro" rel="stylesheet" href="/static/tokens-oscuro.css" media="M">` y `<meta name="color-scheme" content="C">` con: `claro` → `M="not all"`, `C="light"`; `oscuro` → `"all"`, `"dark"`; `sistema`, sin cookie y `tema=azul` → `"(prefers-color-scheme: dark)"`, `"light dark"`. El enlace aparece **después** de `/static/tokens.css` y **antes** de `/static/estilos.css` (orden de carga, R14).
+  - `test_selector_en_menu`: con `titular`, `GET /clientes` contiene un `<form class="form-tema" method="post" action="/tema">` con `<legend>Tema</legend>`, tres `input type="radio" name="tema"` con valores `claro`, `oscuro`, `sistema` en ese orden (marcado el de la cookie; `sistema` sin cookie), un `input type="hidden" name="volver" value="/clientes"` y un botón «Aplicar»; el formulario aparece después del enlace «Mi cuenta» y antes del formulario de `/salir` (FR-117).
+  - `test_sin_sesion_sigue_al_sistema`: con un titular creado pero sin entrar y la cookie `tema=oscuro`, `GET /entrar` → `media="(prefers-color-scheme: dark)"`, `content="light dark"` y sin `form-tema` (FR-124).
+
+### Implementation for User Story 7
+
+**Paleta** (R13, R16, R17)
+
+- [ ] T047 [P] [US7] Crear `presupuestos/static/tokens-oscuro.css` con un comentario de cabecera en español (qué es, que la carga `base.html` según el tema y que el PDF no la usa; referencia a `specs/002-mejoras-ui-usuarios/contracts/tema.md`) y un único bloque `:root { color-scheme: dark; … }` con **exactamente** estas variables y valores (los de [contracts/tema.md §Paleta oscura](./contracts/tema.md#paleta-oscura)): `--color-texto: #e6e9ee; --color-texto-suave: #a9b3bf; --color-marca: #7fb2e5; --color-marca-hover: #a5c9ee; --color-marca-claro: #1d3349; --color-borde-control: #7d8a99; --color-borde: #323b46; --color-fondo: #14191f; --color-fondo-2: #1c232b; --color-sobre-marca: #0d1620; --color-superposicion: rgba(0, 0, 0, .6); --color-sombra: rgba(0, 0, 0, .4); --color-exito: #6fcf97; --color-exito-fondo: #16301f; --color-aviso: #f2c46d; --color-aviso-fondo: #33270f; --color-error: #ff8a80; --color-error-fondo: #3a1a18; --estado-borrador-texto: #b8c1cc; --estado-borrador-fondo: #262d36; --estado-enviado-texto: #8fbde9; --estado-enviado-fondo: #1d3349; --estado-caducado-texto: #f5a962; --estado-caducado-fondo: #3a2412; --estado-aceptado-texto: #6fcf97; --estado-aceptado-fondo: #16301f; --estado-rechazado-texto: #ff8a80; --estado-rechazado-fondo: #3a1a18;`. Nada más: ni tamaños, ni fuentes, ni `--color-fondo-logo`
+- [ ] T048 [P] [US7] En `presupuestos/static/tokens.css`, añadir al bloque de color `--color-fondo-logo: #ffffff;` con el comentario «Fondo de la vista previa del logo: blanco en los dos temas, como en el PDF (FR-129). No se redefine en tokens-oscuro.css.». No cambiar ningún otro valor ni `color-scheme: light` (es la paleta clara y la del PDF)
+
+**Pintar el tema desde el servidor** (R12, R14)
+
+- [ ] T049 [US7] En `presupuestos/rutas/__init__.py`, añadir `COOKIE_TEMA = "tema"`, `TEMAS = ("claro", "oscuro", "sistema")`, `APARIENCIA = {"claro": ("not all", "light"), "oscuro": ("all", "dark"), "sistema": ("(prefers-color-scheme: dark)", "light dark")}` (pares `media` del enlace, `content` del meta) y `def tema_actual(request: Request) -> str`: devuelve el valor de `request.cookies.get(COOKIE_TEMA)` si está en `TEMAS` **y** hay sesión (`getattr(request.state, "usuario", None)`); en cualquier otro caso, `"sistema"` (FR-122, FR-124). Registrar `plantillas.env.globals["tema_actual"] = tema_actual` y `plantillas.env.globals["APARIENCIA"] = APARIENCIA`, con un comentario que cite FR-121 a FR-126 y research R12/R14. Nota: `request.state.usuario` lo pone `usuario_actual`; las páginas sin sesión no lo tienen y por eso siguen al sistema
+- [ ] T050 [US7] En `presupuestos/templates/base.html` (depende de T049): al principio, `{% set tema = tema_actual(request) %}`; cambiar `<meta name="color-scheme" content="light">` por `content="{{ APARIENCIA[tema][1] }}"`; entre `<link … /static/tokens.css>` y `<link … /static/estilos.css>`, añadir `<link id="tokens-oscuro" rel="stylesheet" href="/static/tokens-oscuro.css" media="{{ APARIENCIA[tema][0] }}">` con un comentario Jinja `{# … #}` que explique la tabla de R14 (el navegador aplica la hoja según `media`; con «Como el sistema» la activa y desactiva solo)
+
+**Recordar la elección** (R12, R15)
+
+- [ ] T051 [US7] En `presupuestos/rutas/sesion.py`, añadir `POST /tema` (sección con comentario «Tema (FR-117 a FR-122, research R12, R15)»):
+  - Firma: `tema: str = Form("")`, `volver: str = Form("")`, dependencia `usuario_actual` (importar de `presupuestos.rutas`) para exigir sesión.
+  - Si `tema not in TEMAS` → `HTTPException(422)` (sin cookie).
+  - Destino: `volver` si empieza por `/` y no por `//`; si no, `/` (evita redirigir a otro sitio).
+  - Respuesta: si `request.headers.get("X-Tema-Fetch") == "1"` → `Response(status_code=204)`; si no → `RedirectResponse(destino, status_code=303)`.
+  - Cookie en ambas respuestas con una función `_poner_cookie_tema(respuesta, tema)`: `set_cookie(COOKIE_TEMA, tema, max_age=34560000, httponly=True, samesite="lax", secure=os.environ.get("COOKIE_SEGURA", "1") == "1", path="/")` (400 días; misma regla `secure` que `_respuesta_con_sesion`).
+  - No toca la base de datos. `POST /salir` **no** borra la cookie `tema` (data-model: cerrar sesión no la borra).
+
+**Selector y cambio inmediato** (R15)
+
+- [ ] T052 [US7] En `presupuestos/templates/base.html`, dentro de `<nav id="menu-lateral">`, entre el `</ul>` del grupo «Configuración» y el `<form … action="/salir">`, añadir ([contracts/tema.md §Selector](./contracts/tema.md#selector-tema-fr-117-a-fr-120)):
+  `<form class="form-tema" method="post" action="/tema">` con `<fieldset>` y `<legend class="grupo-menu">Tema</legend>`; tres `<label class="opcion-tema"><input type="radio" name="tema" value="claro|oscuro|sistema"{% if tema == valor %} checked{% endif %}> Claro|Oscuro|Como el sistema</label>` en ese orden; `<input type="hidden" name="volver" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">`; `<button type="submit" class="boton secundario aplicar-tema">Aplicar</button>`. Solo dentro del `{% if usuario %}` existente (sin selector en pantallas sin sesión, FR-124)
+- [ ] T053 [US7] En `presupuestos/static/estilos.css` (solo `var(--…)`), sección «Selector de tema (FR-117, FR-119)»: `.form-tema` con el mismo margen lateral que `.salir`; `fieldset` sin borde, margen ni relleno; la `legend` reutiliza `.grupo-menu`; `.opcion-tema` en bloque, con `display: flex; align-items: center; gap: var(--esp-2); min-height: 44px` (área táctil, FR-214a de la 003) y `color: var(--color-texto)`; el radio con `accent-color: var(--color-marca)`; foco visible con la regla `:focus-visible` común (FR-213); `.form-tema [hidden] { display: none; }` (los botones `.boton` fuerzan `display`, ver nota en `CLAUDE.md`). Comprobar a 360 px que el menú desplegable con el selector no provoca desplazamiento horizontal
+- [ ] T054 [US7] En `presupuestos/static/app.js`, nuevo bloque «tema (FR-117 a FR-120, research R15)» en el mismo estilo IIFE, sin HTMX:
+  - Constante `APARIENCIA` con la misma tabla que `rutas/__init__.py` (`claro` → `["not all", "light"]`, `oscuro` → `["all", "dark"]`, `sistema` → `["(prefers-color-scheme: dark)", "light dark"]`).
+  - `aplicarTema(valor)`: pone `media` en `#tokens-oscuro` y `content` en `meta[name=color-scheme]`.
+  - `guardarTema(form)`: `fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Tema-Fetch": "1" }, credentials: "same-origin" })`; si la respuesta no es `ok` o la promesa falla, `aviso(true)` (reutilizar la función existente); el tema queda aplicado en la página.
+  - Evento `change` en `form.form-tema input[name=tema]` → `aplicarTema(valor)` y `guardarTema(form)` (FR-118: sin recargar; al no ser HTMX no cuenta en `pendientes` de R3 ni interrumpe guardados).
+  - Evento `submit` de `form.form-tema` (Intro sobre un radio) → `preventDefault()` y lo mismo que `change`.
+  - En `DOMContentLoaded`, poner `hidden = true` a `.aplicar-tema` (solo se ve sin JS, FR-120).
+
+**Detalles** (R17)
+
+- [ ] T055 [US7] En `presupuestos/static/estilos.css`, regla `.logo-previa` existente: añadir `background: var(--color-fondo-logo); padding: var(--esp-2); border-radius: var(--radio-sm);` (FR-129). No tocar `pdf.html`
+
+**Repaso visual en oscuro** (FR-125, SC-109)
+
+- [ ] T056 [US7] Con la app en «Oscuro» y luego en «Como el sistema» con el dispositivo en oscuro, recorrer a 360 px y 1280 px todas las pantallas con sesión (historial con Borrador, Enviado y Caducado, presupuesto con error de cantidad, clientes, cliente, catálogo, perfil con y sin logo, ajustes, usuarios, mi cuenta), el menú desplegable con su fondo, el aviso «No se ha podido guardar», la ventana «Exportar…» de la 004 (con y sin presupuestos exportables), el `hx-confirm` de «Quitar logo», los calendarios y los selectores nativos, y las pantallas sin sesión (con el dispositivo en oscuro). Corregir lo que no se lea **solo** en `presupuestos/static/estilos.css` con `var(--…)` o, si falta un color, añadiéndolo a la vez a `tokens.css` y `tokens-oscuro.css` (y a `PARES` de `tests/test_paleta.py` si es un par texto/fondo nuevo). Anotar en este archivo, bajo la tarea, cualquier ajuste hecho
+
+**Checkpoint**: `pytest tests/test_paleta.py tests/test_tema.py` en verde; quickstart F1–F16 en verde.
+
+---
+
+## Phase 12: Polish & cierre de la ampliación
+
+- [ ] T057 Ejecutar `.venv/bin/pytest` completo y confirmar que pasan los tests de la 001–004 y los nuevos (F17)
+- [ ] T058 Recorrer la sección F completa de [quickstart.md](./quickstart.md#f-modo-oscuro-us7-ampliación-2026-11-17) y la regresión de la sección E en un navegador en español (360, 800 y 1280 px); revisar la entrega contra los principios I–V de `.specify/memory/constitution.md` (ninguna dependencia nueva en `pyproject.toml`, ningún JS ni estilo en línea, nada fuera de US7: sin temas extra, sin PDF oscuro, sin selector sin sesión, sin guardar el tema en la cuenta; textos en español de España). Anotar y corregir cualquier fallo antes de dar la ampliación por terminada (constitución, «Verificación de cada entrega»)
+- [ ] T059 [P] Actualizar `specs/README.md`: en la fila de la 002, estado del modo oscuro (implementado, tareas hechas/total, pendientes de verificación); en la fila de la 003, mantener «Ampliada por 002 (paleta oscura, US7)» y añadir que su texto lleva la enmienda del 2026-11-17
+- [ ] T060 Actualizar `CLAUDE.md` con las decisiones de diseño y convenciones nuevas de esta feature, una línea por decisión, con referencia a la spec (p. ej. «[002] …»). No incluir entradas por incluir: solo información transversal y relevante para el proyecto que puedan aprovechar futuras features. Candidatas: la paleta oscura vive en `static/tokens-oscuro.css` con los mismos nombres de color y todo color nuevo se añade a las dos hojas (y a `PARES`); el tema lo calcula el servidor con `tema_actual(request)` (cookie `tema`, por dispositivo) y `base.html` lo aplica con el `media` del `<link>`; el PDF solo lee `tokens.css` y por eso siempre sale en claro
+
+---
+
+## Dependencies & Execution Order (ampliación)
+
+- **T044** antes que todo.
+- **Tests primero**: T045 y T046 (en paralelo) antes de la implementación; deben fallar.
+- **Paleta**: T047 y T048 en paralelo; hacen pasar T045.
+- **Servidor**: T049 → T050 (la plantilla usa `tema_actual` y `APARIENCIA`) → T052 (usa la variable `tema` que define T050).
+- **Ruta**: T051 depende de T049 (`COOKIE_TEMA`, `TEMAS`); independiente de T050/T052.
+- **Selector**: T052 → T053 (estilos del marcado) → T054 (JS sobre el marcado). T054 necesita también T050 (`#tokens-oscuro`) y T051 (la ruta responde 204).
+- **`estilos.css`**: T053 y T055 en serie (mismo archivo).
+- **`base.html`**: T050 y T052 en serie (mismo archivo).
+- **T056** después de T047–T055.
+- **Polish**: T057 → T058; T059 en paralelo con T058; T060 al final.
+- Con la 004: la ventana «Exportar…» ya usa los tokens, así que hereda el tema sin tareas propias; solo se revisa en T056.
+
+### Parallel Example: User Story 7
+
+```bash
+# Tests y paleta a la vez (archivos distintos):
+Task: "T045 tests/test_paleta.py"
+Task: "T046 tests/test_tema.py"
+Task: "T047 presupuestos/static/tokens-oscuro.css"
+Task: "T048 presupuestos/static/tokens.css"
+
+# Tras T049, la ruta y la plantilla en paralelo:
+Task: "T050 presupuestos/templates/base.html (link y meta)"
+Task: "T051 presupuestos/rutas/sesion.py (POST /tema)"
+```
+
+## Implementation Strategy (ampliación)
+
+1. **MVP (sin selector)**: T044–T050. Con la cookie puesta a mano en el navegador ya se ve el tema oscuro y «Como el sistema» funciona (quickstart F5, F6, F8). Parar y comprobar que el PDF sigue en claro.
+2. **Elección persistente**: T051–T052 → selector funcional sin JS (F13).
+3. **Cambio inmediato**: T053–T054 → F1–F3, F11, F16.
+4. **Detalles y repaso**: T055–T056 → F9, F10, F12.
+5. **Cierre**: T057–T060.
+
+Hacer commit tras cada grupo (los hooks de la extensión git lo proponen antes y después de cada comando de Spec Kit).
