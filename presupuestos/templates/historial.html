@@ -4,6 +4,7 @@
 <h1>Presupuestos</h1>
 <form method="post" action="/presupuestos" class="acciones">
   <button type="submit" class="boton">Nuevo presupuesto</button>
+  <button type="button" class="boton secundario" id="abrir-exportar" aria-haspopup="dialog">Exportar…</button>
 </form>
 
 <label for="buscar">Buscar por número o cliente</label>
@@ -11,4 +12,5 @@
        hx-get="/" hx-trigger="input changed delay:300ms, search" hx-target="#lista-presupuestos" hx-swap="outerHTML">
 
 {% include "fragmentos/_historial_lista.html" %}
+{% include "fragmentos/_exportar_ventana.html" %}
 {% endblock %}

@@ -60,6 +60,65 @@
     if (e.key === "Escape" && menuAbierto()) cerrarMenu(true);
   });
 
+  // ------------------------------------------------------------ ventana «Exportar» (spec 004, E1, E2)
+  // <dialog> nativo: showModal() ya atrapa el foco, cierra con Esc y devuelve el foco al botón.
+  // El envío usa fetch para poder mostrar los errores sin salir de la página.
+
+  function ventanaExportar() { return document.getElementById("ventana-exportar"); }
+
+  document.addEventListener("click", function (e) {
+    var ventana = ventanaExportar();
+    if (!ventana || !e.target.closest) return;
+    if (e.target.closest("#abrir-exportar")) {
+      ventana.showModal();
+    } else if (e.target === ventana) {
+      ventana.close(); // clic sobre el fondo, no sobre el contenido
+    } else if (e.target.closest("[data-cerrar-exportar]")) {
+      ventana.close();
+    }
+  });
+
+  function nombreDeArchivo(respuesta) {
+    var cabecera = respuesta.headers.get("Content-Disposition") || "";
+    var m = /filename="([^"]+)"/.exec(cabecera);
+    return m ? m[1] : "copia.zip";
+  }
+
+  function mostrarErrorExportar(texto) {
+    var error = document.getElementById("exportar-error");
+    if (!error) return;
+    error.textContent = texto;
+    error.hidden = false;
+  }
+
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || form.id !== "form-exportar") return;
+    e.preventDefault();
+    var error = document.getElementById("exportar-error");
+    if (error) error.hidden = true;
+    fetch(form.action, { method: "POST", body: new FormData(form) })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.json().then(function (d) { throw new Error(d.error); }, function () { throw new Error(""); });
+        }
+        return r.blob().then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var enlace = document.createElement("a");
+          enlace.href = url;
+          enlace.download = nombreDeArchivo(r);
+          document.body.appendChild(enlace);
+          enlace.click();
+          document.body.removeChild(enlace);
+          URL.revokeObjectURL(url);
+          ventanaExportar().close();
+        });
+      })
+      .catch(function (err) {
+        mostrarErrorExportar(err && err.message ? err.message : "No se ha podido preparar la copia. Inténtalo de nuevo.");
+      });
+  });
+
   // ------------------------------------------------------------ no salir con guardados pendientes (R3)
   // En la pantalla de presupuesto, «Volver al historial» y los enlaces del menú esperan a que terminen
   // los guardados en curso. Si alguno falla (sin conexión, error del servidor o dato no válido), no se sale.

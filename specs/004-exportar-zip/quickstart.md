@@ -63,7 +63,7 @@ Cada paso tiene un resultado observable en la app (constitución, principio IV).
 | D3 | Cliente «Diseño/Web S.L.» | Ya comprobado en A6: el zip se abre sin errores en Windows y macOS |
 | D4 | Cliente con nombre de 150 caracteres | El PDF tiene un nombre razonable (cliente recortado) y el zip se abre bien |
 | D5 | Abre la ventana, y en otra pestaña anonimiza el cliente de un presupuesto marcado; pulsa «Descargar .zip» | Mensaje «La lista ha cambiado. Cierra la ventana y vuelve a abrirla.»; la ventana sigue abierta |
-| D6 | Sin sesión, abre `/exportar` | Te lleva a iniciar sesión; no se descarga nada. Con sesión, abrir `/exportar` en la barra de direcciones (GET) muestra «Esta acción no está permitida» |
+| D6 | Abre `/exportar` en la barra de direcciones (GET), con o sin sesión | Muestra «Esta acción no está permitida» (405); no se descarga nada. (Técnico) Un `POST /exportar` sin sesión redirige a iniciar sesión |
 
 ## E. Muchos presupuestos y espera (US3, SC-307)
 

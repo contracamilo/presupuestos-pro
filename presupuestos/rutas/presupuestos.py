@@ -12,6 +12,7 @@ from presupuestos.dominio import estado, fechas, formato
 from presupuestos.dominio.nombre_archivo import nombre_pdf
 from presupuestos.dominio.validacion import requisitos_descarga
 from presupuestos.rutas import es_htmx, pagina, plantillas, redirigir, usuario_actual
+from presupuestos.rutas.exportar import presupuestos_exportables, resumen_exportacion
 
 router = APIRouter(dependencies=[Depends(usuario_actual)])
 
@@ -108,6 +109,8 @@ def historial(request: Request, q: str = "", conn: sqlite3.Connection = Depends(
     contexto = {"presupuestos": filas, "q": q}
     if es_htmx(request) and request.headers.get("HX-Target") == "lista-presupuestos":
         return _fragmento(request, "fragmentos/_historial_lista.html", contexto)
+    contexto["exportables"] = presupuestos_exportables(conn)
+    contexto["resumen"] = resumen_exportacion(conn)
     return pagina(request, "historial.html", contexto)
 
 

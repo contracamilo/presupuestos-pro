@@ -1,0 +1,25 @@
+{# Ventana «Exportar» del historial (spec 004, contracts/rutas-http.md). Sin JS ni estilos en línea (CSP). #}
+<dialog id="ventana-exportar" aria-labelledby="exportar-titulo">
+  <h2 id="exportar-titulo">Exportar</h2>
+  {% if resumen.total == 0 %}
+  <p>No hay presupuestos que exportar</p>
+  <form method="dialog" class="acciones">
+    <button type="submit" class="boton secundario">Cerrar</button>
+  </form>
+  {% else %}
+  <form id="form-exportar" method="post" action="/exportar" data-exportables="{{ resumen.exportables }}">
+    <fieldset>
+      <legend>Qué exportar</legend>
+      <label class="casilla" for="modo-todo">
+        <input type="radio" name="modo" value="todo" id="modo-todo" checked>
+        Todo
+      </label>
+    </fieldset>
+    <p id="exportar-error" class="error" role="alert" hidden></p>
+    <div class="acciones">
+      <button type="submit" class="boton" id="exportar-descargar">Descargar .zip</button>
+      <button type="button" class="boton secundario" id="exportar-cancelar" data-cerrar-exportar>Cancelar</button>
+    </div>
+  </form>
+  {% endif %}
+</dialog>

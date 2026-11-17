@@ -1,14 +1,18 @@
-"""Exportar todos los datos de negocio (FR-029, contracts/archivo-exportacion.md). Sin cuentas ni contraseñas."""
+"""Exportar en un .zip (spec 004, contracts/): PDF + archivo de datos. Sin cuentas ni contraseñas."""
 
 import base64
+import io
 import json
+import logging
 import sqlite3
+import zipfile
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, Form
+from fastapi.responses import JSONResponse, Response
 
 from presupuestos import db
 from presupuestos.dominio import estado, fechas
+from presupuestos.dominio.nombre_archivo import nombre_pdf_zip
 from presupuestos.dominio.validacion import requisitos_descarga
 from presupuestos.rutas import usuario_actual
 
@@ -104,11 +108,46 @@ def resumen_exportacion(conn: sqlite3.Connection) -> dict:
     return {"total": total, "exportables": exportables, "solo_datos": total - exportables}
 
 
-@router.get("/exportar")
-def exportar(conn: sqlite3.Connection = Depends(db.get_db)):
-    contenido = json.dumps(datos_exportacion(conn), ensure_ascii=False, indent=2)
+def _error(codigo: int, mensaje: str) -> JSONResponse:
+    return JSONResponse({"error": mensaje}, status_code=codigo)
+
+
+@router.post("/exportar")
+def exportar(modo: str = Form(""), ids: list[str] = Form([]), conn: sqlite3.Connection = Depends(db.get_db)):
+    """Exporta un .zip con los PDF y el archivo de datos. Solo lectura (FR-305, research E3, E4)."""
+    from presupuestos.rutas.presupuestos import html_pdf
+
+    if modo not in ("todo", "seleccion"):
+        return _error(422, "Elige qué exportar.")
+    if modo == "seleccion":  # llega en la historia US1b
+        return _error(422, "Elige qué exportar.")
+
+    try:
+        conn.execute("BEGIN")  # una sola lectura coherente; se cierra con ROLLBACK, nunca escribe
+        try:
+            if conn.execute("SELECT COUNT(*) FROM presupuestos").fetchone()[0] == 0:
+                return _error(422, "No hay presupuestos que exportar.")
+            datos_archivo = datos_exportacion(conn)
+            pdfs = []
+            for e in sorted(presupuestos_exportables(conn), key=lambda e: e["numero"]):
+                datos = db.cargar_presupuesto(conn, e["id"])
+                pdfs.append((nombre_pdf_zip(e["numero"], e["cliente_nombre"]), html_pdf(conn, datos)))
+        finally:
+            conn.execute("ROLLBACK")
+
+        from presupuestos.pdf import generar_pdf  # WeasyPrint solo se carga al generar un PDF
+
+        base = f"presupuestospro-copia-{fechas.hoy()}"
+        salida = io.BytesIO()
+        with zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr(f"{base}.json", json.dumps(datos_archivo, ensure_ascii=False, indent=2))
+            for nombre, html in pdfs:
+                z.writestr(nombre, generar_pdf(html))
+    except Exception:
+        logging.getLogger(__name__).exception("Fallo al preparar la exportación")
+        return _error(500, "No se ha podido preparar la copia. Inténtalo de nuevo.")
     return Response(
-        contenido.encode("utf-8"),
-        media_type="application/json; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="presupuestospro-copia-{fechas.hoy()}.json"'},
+        salida.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{base}.zip"'},
     )

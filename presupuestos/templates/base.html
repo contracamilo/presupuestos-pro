@@ -42,7 +42,6 @@
       <li>{{ enlace('/ajustes', 'Ajustes', ('/ajustes',)) }}</li>
       {% if usuario.tipo == 'titular' %}<li>{{ enlace('/usuarios', 'Usuarios', ('/usuarios',)) }}</li>{% endif %}
       <li>{{ enlace('/mi-cuenta', 'Mi cuenta', ('/mi-cuenta',)) }}</li>
-      <li>{{ enlace('/exportar', 'Exportar') }}</li>
     </ul>
     <form method="post" action="/salir" class="salir">
       <button type="submit" class="boton secundario">Salir</button>

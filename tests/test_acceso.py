@@ -159,7 +159,7 @@ def test_origen_ajeno_rechazado(titular):
 def test_respuestas_autenticadas_sin_cache(titular):
     r = titular.post("/presupuestos")
     id_ = r.headers["location"].rsplit("/", 1)[1]
-    for path in ("/", f"/presupuestos/{id_}", "/exportar"):
+    for path in ("/", f"/presupuestos/{id_}"):
         assert titular.get(path).headers["Cache-Control"] == "no-store", path
 
 
@@ -263,3 +263,15 @@ def test_quitar_logo_conserva_la_imagen(titular, conn):
     assert conn.execute("SELECT COUNT(*) FROM logos").fetchone()[0] == 1
     r = titular.get("/perfil?logo=quitado")
     assert "Logo quitado." in r.text and "Quitar logo" not in r.text
+
+
+def test_exportar_solo_por_post(cliente, titular):
+    """Spec 004 (FR-314): la exportación suelta por GET ya no existe; /exportar solo admite POST."""
+    r = titular.get("/exportar")
+    assert r.status_code == 405 and "Esta acción no está permitida" in r.text
+    assert 'href="/exportar"' not in titular.get("/").text  # sin enlace en el menú
+
+
+def test_exportar_post_sin_sesion(cliente):
+    r = cliente.post("/exportar", data={"modo": "todo"})
+    assert r.status_code == 303 and r.headers["location"] == "/entrar"
