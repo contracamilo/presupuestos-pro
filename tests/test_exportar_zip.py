@@ -348,3 +348,10 @@ def test_volumen(titular, conn, perfil, pdf_falso, cantidad):
     pdfs = [n for n in z.namelist() if n.endswith(".pdf")]
     assert len(pdfs) == cantidad and len(set(pdfs)) == cantidad
     assert len(z.namelist()) == cantidad + 1
+
+
+def test_estilos_respetan_hidden_en_la_ventana():
+    """`.error` y `.mensaje` fuerzan `display`; sin esta regla el error vacío se vería siempre."""
+    from pathlib import Path
+    css = (Path(__file__).parent.parent / "presupuestos" / "static" / "estilos.css").read_text(encoding="utf-8")
+    assert "dialog#ventana-exportar [hidden] { display: none; }" in css
